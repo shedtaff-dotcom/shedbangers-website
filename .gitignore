@@ -1,0 +1,11 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# Temp files
+*.tmp
+*.log
