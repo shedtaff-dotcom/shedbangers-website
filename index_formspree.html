@@ -136,7 +136,6 @@
                     </div>
                     <p class="video-caption">Live at The Epsom Club — April 2024</p>
                 </div>
-                <!--
                 <div class="video-card" data-aos="fade-up" data-aos-delay="200">
                     <div class="video-embed">
                         <iframe
@@ -161,7 +160,6 @@
                     </div>
                     <p class="video-caption">Ukraine Fundraiser Gig</p>
                 </div>
-                -->
             </div>
             <div class="section-cta" data-aos="fade-up">
                 <a href="https://www.youtube.com/@shedbangers" target="_blank" rel="noopener" class="btn btn-outline-light">
@@ -377,25 +375,26 @@
                     </div>
                 </div>
 
+                <!-- Formspree contact form — replace ACTION_URL with your Formspree endpoint -->
                 <div class="contact-form-wrap" data-aos="fade-left" data-aos-delay="150">
-                    <form class="contact-form" id="contactForm" novalidate>
+                    <form class="contact-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
                         <div class="form-group">
                             <label for="name">Your Name</label>
-                            <input type="text" id="name" name="name" required placeholder="Dave Smith">
+                            <input type="text" id="name" name="name" required placeholder="Jimmi Hendrix">
                         </div>
                         <div class="form-group">
-                            <label for="email">Your Email Address</label>
-                            <input type="email" id="email" name="email" required placeholder="dave@example.com">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" required placeholder="jimmi@hendrix.com">
                         </div>
                         <div class="form-group">
-                            <label for="event">What's The Occasion?</label>
+                            <label for="event">Tell Us About Your Event</label>
                             <select id="event" name="event_type">
-                                <option value="">Select event type</option>
-                                <option value="Birthday Party">Birthday Party</option>
-                                <option value="Wedding / Anniversary">Wedding / Anniversary</option>
-                                <option value="Pub / Venue Night">Pub / Venue Night</option>
-                                <option value="Corporate Event">Corporate Event</option>
-                                <option value="Other">Other</option>
+                                <option value="">What's the occasion?</option>
+                                <option value="birthday">Birthday Party</option>
+                                <option value="wedding">Wedding / Anniversary</option>
+                                <option value="pub">Pub / Venue Night</option>
+                                <option value="corporate">Corporate Event</option>
+                                <option value="other">Other</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -405,32 +404,6 @@
                         <button type="submit" class="btn btn-primary btn-full">Send Message</button>
                     </form>
                 </div>
-
-                <script>
-                document.getElementById('contactForm').addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const name    = document.getElementById('name').value.trim();
-                    const email   = document.getElementById('email').value.trim();
-                    const event   = document.getElementById('event').value;
-                    const message = document.getElementById('message').value.trim();
-
-                    if (!name || !email || !message) {
-                        alert('Please fill in your name, email and message.');
-                        return;
-                    }
-
-                    const subject = encodeURIComponent(
-                        `Shedbangers Booking Enquiry${event ? ' — ' + event : ''}`
-                    );
-                    const body = encodeURIComponent(
-                        `Name: ${name}\nEmail: ${email}\nEvent type: ${event || 'Not specified'}\n\n${message}`
-                    );
-
-                    // Email address assembled in JS — mild bot deterrent
-                    const to = ['shedbangers', 'gmail.com'].join('@');
-                    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
-                });
-                </script>
             </div>
         </div>
     </section>

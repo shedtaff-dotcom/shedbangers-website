@@ -59,7 +59,7 @@
                 <img src="images/logos/Shedbangers_logo_plain_transparent.png" alt="The Shedbangers">
             </div>
             <p class="hero-tagline" data-aos="fade-up" data-aos-delay="200" data-aos-duration="800">
-                5 blokes &nbsp;·&nbsp; 70+ songs &nbsp;·&nbsp; zero apologies
+                5 blokes &nbsp;·&nbsp; 90 songs &nbsp;·&nbsp; zero apologies
             </p>
             <p class="hero-sub" data-aos="fade-up" data-aos-delay="350" data-aos-duration="800">
                 Classic rock covers for parties, pubs & people who know what's good
@@ -87,15 +87,15 @@
                 <div class="about-text" data-aos="fade-left" data-aos-duration="700" data-aos-delay="150">
                     <span class="section-label">Who We Are</span>
                     <h2>Dad Rock<br>Done <em>Properly</em></h2>
-                    <p>We're five blokes from Epsom who've been playing classic rock for longer than we care to admit. No egos, no dry ice, no twenty-minute guitar solos (well, ocassionaly) — just great songs played well, with a crowd that actually wants to dance.</p>
-                    <p>From Elvis to Van Halen, Queen to The Stereophonics — if it rocks, it's probably in our <strong><a href="setlist.html">setlist</a></strong>.</p>
+                    <p>We're five blokes from Epsom who've been playing classic rock for longer than we care to admit. No egos, no dry ice, no twenty-minute guitar solos — just great songs played well, with a crowd that actually wants to dance.</p>
+                    <p>From Bon Jovi to ACDC, Thin Lizzy to The Killers — if it rocks, it's probably in our <strong>90-song setlist</strong>.</p>
                     <div class="stats-row">
                         <div class="stat">
                             <span class="stat-number">5</span>
                             <span class="stat-label">Blokes</span>
                         </div>
                         <div class="stat">
-                            <span class="stat-number">70+</span>
+                            <span class="stat-number">90</span>
                             <span class="stat-label">Songs</span>
                         </div>
                         <div class="stat">
@@ -136,7 +136,6 @@
                     </div>
                     <p class="video-caption">Live at The Epsom Club — April 2024</p>
                 </div>
-                <!--
                 <div class="video-card" data-aos="fade-up" data-aos-delay="200">
                     <div class="video-embed">
                         <iframe
@@ -161,7 +160,6 @@
                     </div>
                     <p class="video-caption">Ukraine Fundraiser Gig</p>
                 </div>
-                -->
             </div>
             <div class="section-cta" data-aos="fade-up">
                 <a href="https://www.youtube.com/@shedbangers" target="_blank" rel="noopener" class="btn btn-outline-light">
@@ -182,8 +180,8 @@
                 <p>Click any photo to see it full size.</p>
             </div>
             <div class="photo-grid">
-                <a href="images/gigs/shedbangers_live_beerfestival.jpg" class="glightbox photo-item photo-item--wide" data-gallery="gallery1" data-aos="zoom-in" data-aos-delay="100">
-                    <img src="images/gigs/shedbangers_live_beerfestival.jpg" alt="The Shedbangers at the Beer Festival" loading="lazy">
+                <a href="images/gigs/shedbanger_live_beerfestival.png" class="glightbox photo-item photo-item--wide" data-gallery="gallery1" data-aos="zoom-in" data-aos-delay="100">
+                    <img src="images/gigs/shedbanger_live_beerfestival.png" alt="The Shedbangers at the Beer Festival" loading="lazy">
                     <div class="photo-overlay"><span>View Photo</span></div>
                 </a>
                 <a href="images/gigs/shedbangers_live_ukraine.jpg" class="glightbox photo-item" data-gallery="gallery1" data-aos="zoom-in" data-aos-delay="200">
@@ -204,7 +202,7 @@
 
     <!-- ============================================================
          AUDIO
-
+    ============================================================ -->
     <section id="music" class="section-warm">
         <div class="container">
             <div class="section-header" data-aos="fade-up">
@@ -213,7 +211,7 @@
                 <p>Recorded live — warts and all. That's the point.</p>
             </div>
             <div class="audio-list" data-aos="fade-up" data-aos-delay="100">
-                #TODO: replace with actual tracks — ideally a mix of live recordings and some studio demos. Embed using HTML5 audio player for simplicity, or link to Spotify/Apple Music if you have them there.
+                <!-- Add your audio files to /audio and duplicate this block -->
                 <div class="audio-track">
                     <div class="audio-track-info">
                         <span class="audio-track-number">01</span>
@@ -227,10 +225,10 @@
                         Your browser doesn't support HTML5 audio.
                     </audio>
                 </div>
+                <!-- More tracks go here -->
             </div>
         </div>
     </section>
-    ============================================================ -->
 
     <!-- ============================================================
          GIGS — loaded dynamically from Google Sheets CSV
@@ -333,7 +331,7 @@
             .then(text => renderGigs(parseCSV(text)))
             .catch(() => {
                 document.getElementById('gigsList').innerHTML = `
-                <div class="gigs-empty">
+                    <div class="gigs-empty">
                         <p>Couldn't load gigs right now — check back soon or <a href="#contact">get in touch</a>.</p>
                     </div>`;
             });
@@ -357,7 +355,7 @@
                         </li>
                         <li>
                             <svg viewBox="0 0 24 24" width="20" height="20"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                            shedbangers@gmail.com
+                            theshedbangers@gmail.com
                         </li>
                         <li>
                             <svg viewBox="0 0 24 24" width="20" height="20"><path d="M17 2H7a2 2 0 00-2 2v16l7-3 7 3V4a2 2 0 00-2-2z" stroke="currentColor" stroke-width="2" fill="none"/></svg>
