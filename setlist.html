@@ -386,6 +386,11 @@
                     <span class="hero-stat-label">Apologies</span>
                 </div>
             </div>
+            <div style="margin-top: 2rem;">
+                <button id="downloadPDF" class="btn btn-outline" style="opacity:0.5;cursor:not-allowed" disabled>
+                    ⬇ Download Setlist PDF
+                </button>
+            </div>
         </div>
     </div>
 
@@ -452,6 +457,8 @@
 
     <!-- SCRIPTS -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script src="js/main.js"></script>
     <script>
     // ============================================================
@@ -649,6 +656,7 @@
             document.getElementById('totalSongs').textContent = allSongs.length;
             buildFilters(allSongs);
             render();
+            enablePDFButton();
         })
         .catch(err => {
             document.getElementById('loadingState').innerHTML =
@@ -658,6 +666,86 @@
 
     // Year
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    // --- PDF Download ----------------------------------------
+    function enablePDFButton() {
+        const btn = document.getElementById('downloadPDF');
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+
+        btn.addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+            // Header
+            doc.setFillColor(17, 18, 20);
+            doc.rect(0, 0, 210, 40, 'F');
+
+            doc.setTextColor(245, 240, 232);
+            doc.setFontSize(28);
+            doc.setFont('helvetica', 'bold');
+            doc.text('THE SHEDBANGERS', 105, 18, { align: 'center' });
+
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(192, 57, 43);
+            doc.text('DAD ROCK DONE PROPERLY', 105, 26, { align: 'center' });
+
+            doc.setTextColor(150, 150, 150);
+            doc.setFontSize(9);
+            doc.text(`${allSongs.length} songs  ·  theshedbangers.co.uk`, 105, 34, { align: 'center' });
+
+            // Table
+            const rows = [...allSongs]
+                .sort((a, b) => a.song.localeCompare(b.song))
+                .map(s => [s.song, s.artist, s.genre, s.decade]);
+
+            doc.autoTable({
+                startY: 45,
+                head: [['Song', 'Artist', 'Genre', 'Decade']],
+                body: rows,
+                theme: 'striped',
+                headStyles: {
+                    fillColor: [43, 108, 176],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    fontSize: 9,
+                },
+                bodyStyles: {
+                    fontSize: 8.5,
+                    textColor: [30, 30, 30],
+                },
+                alternateRowStyles: {
+                    fillColor: [245, 245, 245],
+                },
+                columnStyles: {
+                    0: { cellWidth: 70, fontStyle: 'bold' },
+                    1: { cellWidth: 60 },
+                    2: { cellWidth: 38 },
+                    3: { cellWidth: 22 },
+                },
+                margin: { left: 10, right: 10 },
+            });
+
+            // Footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(180, 180, 180);
+                doc.text(
+                    `The Shedbangers Setlist  ·  theshedbangers.co.uk  ·  Page ${i} of ${pageCount}`,
+                    105,
+                    doc.internal.pageSize.height - 8,
+                    { align: 'center' }
+                );
+            }
+
+            doc.save('The-Shedbangers-Setlist.pdf');
+        });
+    }
+
     </script>
 
 </body>

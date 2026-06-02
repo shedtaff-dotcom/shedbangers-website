@@ -136,6 +136,24 @@ em { font-style: italic; color: var(--red); }
     transform: translateY(-2px);
 }
 
+.btn-outline-dark {
+    background: transparent;
+    color: var(--text-dark);
+    border-color: var(--text-dark);
+}
+.btn-outline-dark:hover {
+    background: var(--text-dark);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.about-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
 .btn-full { width: 100%; text-align: center; }
 
 /* --- NAVIGATION ------------------------------------------- */
