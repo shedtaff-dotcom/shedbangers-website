@@ -283,8 +283,7 @@ em { font-style: italic; color: var(--red); }
 
 .hero-logo {
     margin: 0 auto 1.5rem;
-    max-width: 760px;
-    margin-top: 10rem;   /* 👈 add this — increase until it clears your face */
+    max-width: 480px;
 }
 
 .hero-logo img {
