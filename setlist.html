@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Setlist | The Shedbangers</title>
+    <meta name="description" content="90 songs, zero apologies. Browse the full Shedbangers setlist — filter by genre or decade.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
+
+    <!-- AOS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <!-- Main site CSS -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* ---- Page-specific styles ---- */
+        .setlist-hero {
+            background: var(--dark-2);
+            padding: calc(var(--nav-h) + 3rem) 0 3rem;
+            text-align: center;
+            border-bottom: 3px solid var(--red);
+        }
+
+        .setlist-hero h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            color: var(--off-white);
+            line-height: 1;
+        }
+
+        .setlist-hero p {
+            color: rgba(245,240,232,0.6);
+            font-size: 1.1rem;
+            margin-top: 0.75rem;
+        }
+
+        .setlist-hero .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+            margin-top: 1.75rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-number {
+            display: block;
+            font-family: var(--font-head);
+            font-size: 2.5rem;
+            color: var(--red);
+            line-height: 1;
+        }
+
+        .hero-stat-label {
+            font-family: var(--font-cond);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(245,240,232,0.4);
+        }
+
+        /* ---- Filters ---- */
+        .setlist-controls {
+            background: var(--dark-3);
+            padding: 1.5rem 0;
+            position: sticky;
+            top: var(--nav-h);
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .controls-inner {
+            max-width: var(--max-w);
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-family: var(--font-cond);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(245,240,232,0.4);
+            white-space: nowrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .filter-btn {
+            font-family: var(--font-cond);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(245,240,232,0.6);
+            padding: 0.4rem 0.9rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--blue-light);
+            color: var(--blue-light);
+        }
+
+        .filter-btn.active {
+            background: var(--red);
+            border-color: var(--red);
+            color: #fff;
+        }
+
+        .filter-divider {
+            width: 1px;
+            height: 24px;
+            background: rgba(255,255,255,0.1);
+            align-self: center;
+            flex-shrink: 0;
+        }
+
+        .sort-btn {
+            font-family: var(--font-cond);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: none;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: rgba(245,240,232,0.5);
+            padding: 0.4rem 0.9rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .sort-btn:hover, .sort-btn.active {
+            border-color: var(--blue-light);
+            color: var(--blue-light);
+        }
+
+        /* ---- Song count ---- */
+        .setlist-count {
+            max-width: var(--max-w);
+            margin: 1.5rem auto 0.5rem;
+            padding: 0 1.5rem;
+            font-family: var(--font-cond);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(245,240,232,0.35);
+        }
+
+        /* ---- Setlist table ---- */
+        .setlist-section {
+            background: var(--dark);
+            min-height: 60vh;
+            padding: 0 0 4rem;
+        }
+
+        .setlist-table-wrap {
+            max-width: var(--max-w);
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .setlist-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .setlist-table thead tr {
+            border-bottom: 2px solid rgba(255,255,255,0.08);
+        }
+
+        .setlist-table th {
+            font-family: var(--font-cond);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(245,240,232,0.3);
+            padding: 0.85rem 1rem 0.85rem 0;
+            text-align: left;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .setlist-table th:hover { color: var(--blue-light); }
+
+        .setlist-table th .sort-indicator {
+            display: inline-block;
+            margin-left: 0.3rem;
+            opacity: 0.4;
+            font-size: 0.7rem;
+        }
+
+        .setlist-table th.sorted { color: var(--blue-light); }
+        .setlist-table th.sorted .sort-indicator { opacity: 1; }
+
+        .setlist-table tbody tr {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.15s ease;
+        }
+
+        .setlist-table tbody tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        .setlist-table td {
+            padding: 0.9rem 1rem 0.9rem 0;
+            color: var(--off-white);
+            font-size: 0.95rem;
+        }
+
+        .setlist-table td:first-child {
+            font-family: var(--font-cond);
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            color: #fff;
+        }
+
+        .setlist-table td.artist {
+            color: rgba(245,240,232,0.6);
+            font-size: 0.9rem;
+        }
+
+        .genre-badge {
+            display: inline-block;
+            font-family: var(--font-cond);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.2rem 0.6rem;
+            border-radius: 2rem;
+            border: 1px solid;
+            white-space: nowrap;
+        }
+
+        /* Genre colours */
+        .genre-classic-rock    { color: #60a5fa; border-color: rgba(96,165,250,0.3); background: rgba(96,165,250,0.08); }
+        .genre-hard-rock       { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.08); }
+        .genre-blues-rock      { color: #a78bfa; border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.08); }
+        .genre-punk-new-wave   { color: #34d399; border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.08); }
+        .genre-indie-alt       { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.08); }
+        .genre-rock-roll       { color: #f97316; border-color: rgba(249,115,22,0.3); background: rgba(249,115,22,0.08); }
+        .genre-rb-soul         { color: #e879f9; border-color: rgba(232,121,249,0.3); background: rgba(232,121,249,0.08); }
+        .genre-pop-rock        { color: #2dd4bf; border-color: rgba(45,212,191,0.3); background: rgba(45,212,191,0.08); }
+        .genre-country-rock    { color: #d4a853; border-color: rgba(212,168,83,0.3); background: rgba(212,168,83,0.08); }
+        .genre-pop             { color: #fb7185; border-color: rgba(251,113,133,0.3); background: rgba(251,113,133,0.08); }
+
+        .decade-badge {
+            font-family: var(--font-cond);
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: rgba(245,240,232,0.35);
+        }
+
+        /* ---- Loading / empty states ---- */
+        .setlist-loading,
+        .setlist-empty {
+            text-align: center;
+            padding: 4rem 1.5rem;
+            color: rgba(245,240,232,0.4);
+        }
+
+        .setlist-loading .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: var(--red);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .setlist-empty p { font-size: 1.1rem; }
+        .setlist-empty .clear-filters {
+            color: var(--blue-light);
+            cursor: pointer;
+            text-decoration: underline;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-family: var(--font-body);
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        /* ---- Back link ---- */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--font-cond);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(245,240,232,0.4);
+            padding: 1.25rem 1.5rem;
+            max-width: var(--max-w);
+            margin: 0 auto;
+            display: block;
+            transition: color 0.2s ease;
+        }
+        .back-link:hover { color: var(--off-white); }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 640px) {
+            .setlist-table th:nth-child(3),
+            .setlist-table td:nth-child(3) { display: none; }
+
+            .controls-inner { gap: 0.75rem; }
+            .filter-divider { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAV (same as index.html) -->
+    <nav id="navbar" class="scrolled">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">
+                <img src="images/logos/Shedbangers_logo_small.jpg" alt="The Shedbangers" height="48">
+            </a>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#videos">Videos</a></li>
+                <li><a href="index.html#photos">Photos</a></li>
+                <li><a href="index.html#music">Music</a></li>
+                <li><a href="index.html#gigs">Gigs</a></li>
+                <li><a href="setlist.html" class="active-page">Setlist</a></li>
+                <li><a href="index.html#contact" class="nav-cta">Book Us</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="setlist-hero">
+        <div class="container">
+            <span class="section-label">What We Play</span>
+            <h1>The Setlist</h1>
+            <p>Classic rock from the 50s to the 10s — something for everyone.</p>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <span class="hero-stat-number" id="totalSongs">—</span>
+                    <span class="hero-stat-label">Songs</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-number">6</span>
+                    <span class="hero-stat-label">Decades</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-number">0</span>
+                    <span class="hero-stat-label">Apologies</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STICKY FILTERS -->
+    <div class="setlist-controls">
+        <div class="controls-inner">
+            <span class="filter-label">Genre</span>
+            <div class="filter-group" id="genreFilters">
+                <button class="filter-btn active" data-filter="genre" data-value="all">All</button>
+            </div>
+            <div class="filter-divider"></div>
+            <span class="filter-label">Decade</span>
+            <div class="filter-group" id="decadeFilters">
+                <button class="filter-btn active" data-filter="decade" data-value="all">All</button>
+            </div>
+            <div class="filter-divider"></div>
+            <button class="sort-btn active" id="sortAZ" title="Sort A–Z">A–Z</button>
+            <button class="sort-btn" id="sortArtist" title="Sort by Artist">Artist</button>
+        </div>
+    </div>
+
+    <!-- SETLIST -->
+    <div class="setlist-section">
+        <div class="setlist-table-wrap">
+            <p class="setlist-count" id="songCount"></p>
+
+            <!-- Loading state -->
+            <div class="setlist-loading" id="loadingState">
+                <div class="spinner"></div>
+                <p>Loading setlist…</p>
+            </div>
+
+            <!-- Table (hidden until loaded) -->
+            <table class="setlist-table" id="setlistTable" style="display:none">
+                <thead>
+                    <tr>
+                        <th data-col="song">Song <span class="sort-indicator">↕</span></th>
+                        <th data-col="artist" class="artist">Artist <span class="sort-indicator">↕</span></th>
+                        <th data-col="genre">Genre <span class="sort-indicator">↕</span></th>
+                        <th data-col="decade">Decade <span class="sort-indicator">↕</span></th>
+                    </tr>
+                </thead>
+                <tbody id="setlistBody"></tbody>
+            </table>
+
+            <!-- Empty state -->
+            <div class="setlist-empty" id="emptyState" style="display:none">
+                <p>No songs match those filters.</p>
+                <button class="clear-filters" id="clearFilters">Clear filters</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-inner">
+                <img src="images/logos/Shedbangers_logo_transparent.png" alt="The Shedbangers" height="40" class="footer-logo">
+                <p class="footer-tagline">Dad rock done properly 🎸</p>
+                <p class="footer-copy">&copy; <span id="year"></span> The Shedbangers. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+    // ============================================================
+    // SETLIST PAGE — fetch CSV, render, filter, sort
+    // ============================================================
+
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRLhCzPFQvhWAsQFLB94ddm_wybQhSFwqjW3d5FYeE-RC0j5V34tK8B9fdhGtJ84uyAzlhlsnEebeIJ/pub?gid=568675691&single=true&output=csv';
+
+    // Map genre string → CSS class suffix
+    const GENRE_CLASS = {
+        'Classic Rock':        'classic-rock',
+        'Hard Rock':           'hard-rock',
+        'Blues Rock':          'blues-rock',
+        'Punk / New Wave':     'punk-new-wave',
+        'Indie / Alternative': 'indie-alt',
+        'Rock & Roll':         'rock-roll',
+        'R&B / Soul':          'rb-soul',
+        'Pop Rock':            'pop-rock',
+        'Country Rock':        'country-rock',
+        'Pop':                 'pop',
+    };
+
+    let allSongs    = [];
+    let activeGenre = 'all';
+    let activeDecade= 'all';
+    let sortCol     = 'song';
+    let sortDir     = 'asc';
+
+    // --- Parse CSV (handles quoted fields) --------------------
+    function parseCSV(text) {
+        const lines = text.trim().split('\n');
+        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+        return lines.slice(1).map(line => {
+            const cols = [];
+            let cur = '', inQ = false;
+            for (let i = 0; i < line.length; i++) {
+                const c = line[i];
+                if (c === '"') { inQ = !inQ; }
+                else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+                else { cur += c; }
+            }
+            cols.push(cur.trim());
+            const obj = {};
+            headers.forEach((h, i) => obj[h.toLowerCase()] = (cols[i] || '').replace(/^"|"$/g, '').trim());
+            return obj;
+        }).filter(r => r.song);
+    }
+
+    // --- Build filter buttons ---------------------------------
+    function buildFilters(songs) {
+        const genres  = [...new Set(songs.map(s => s.genre).filter(Boolean))].sort();
+        const decades = [...new Set(songs.map(s => s.decade).filter(Boolean))].sort();
+
+        const gContainer = document.getElementById('genreFilters');
+        genres.forEach(g => {
+            const btn = document.createElement('button');
+            btn.className = 'filter-btn';
+            btn.dataset.filter = 'genre';
+            btn.dataset.value = g;
+            btn.textContent = g;
+            gContainer.appendChild(btn);
+        });
+
+        const dContainer = document.getElementById('decadeFilters');
+        decades.forEach(d => {
+            const btn = document.createElement('button');
+            btn.className = 'filter-btn';
+            btn.dataset.filter = 'decade';
+            btn.dataset.value = d;
+            btn.textContent = d;
+            dContainer.appendChild(btn);
+        });
+    }
+
+    // --- Render table -----------------------------------------
+    function render() {
+        let songs = allSongs.filter(s => {
+            const gMatch = activeGenre  === 'all' || s.genre  === activeGenre;
+            const dMatch = activeDecade === 'all' || s.decade === activeDecade;
+            return gMatch && dMatch;
+        });
+
+        // Sort
+        songs.sort((a, b) => {
+            const av = (a[sortCol] || '').toLowerCase();
+            const bv = (b[sortCol] || '').toLowerCase();
+            return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+        });
+
+        const tbody = document.getElementById('setlistBody');
+        const table = document.getElementById('setlistTable');
+        const empty = document.getElementById('emptyState');
+        const count = document.getElementById('songCount');
+
+        tbody.innerHTML = '';
+
+        if (songs.length === 0) {
+            table.style.display = 'none';
+            empty.style.display = 'block';
+            count.textContent = '';
+            return;
+        }
+
+        table.style.display = 'table';
+        empty.style.display = 'none';
+        count.textContent = `Showing ${songs.length} of ${allSongs.length} songs`;
+
+        songs.forEach(s => {
+            const genreClass = GENRE_CLASS[s.genre] || 'classic-rock';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${s.song || ''}</td>
+                <td class="artist">${s.artist || ''}</td>
+                <td><span class="genre-badge genre-${genreClass}">${s.genre || ''}</span></td>
+                <td><span class="decade-badge">${s.decade || ''}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Update column sort indicators
+        document.querySelectorAll('.setlist-table th').forEach(th => {
+            th.classList.remove('sorted');
+            const ind = th.querySelector('.sort-indicator');
+            if (th.dataset.col === sortCol) {
+                th.classList.add('sorted');
+                ind.textContent = sortDir === 'asc' ? '↑' : '↓';
+            } else {
+                ind.textContent = '↕';
+            }
+        });
+    }
+
+    // --- Event: filter buttons --------------------------------
+    document.addEventListener('click', e => {
+        const btn = e.target.closest('.filter-btn');
+        if (!btn) return;
+
+        const filterType = btn.dataset.filter;
+        const value      = btn.dataset.value;
+
+        if (filterType === 'genre') {
+            activeGenre = value;
+            document.querySelectorAll('[data-filter="genre"]').forEach(b => b.classList.toggle('active', b.dataset.value === value));
+        } else {
+            activeDecade = value;
+            document.querySelectorAll('[data-filter="decade"]').forEach(b => b.classList.toggle('active', b.dataset.value === value));
+        }
+        render();
+    });
+
+    // --- Event: column header sort ----------------------------
+    document.querySelectorAll('.setlist-table th[data-col]').forEach(th => {
+        th.addEventListener('click', () => {
+            const col = th.dataset.col;
+            if (sortCol === col) {
+                sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortCol = col;
+                sortDir = 'asc';
+            }
+            render();
+        });
+    });
+
+    // --- Event: A-Z / Artist sort buttons ---------------------
+    document.getElementById('sortAZ').addEventListener('click', function() {
+        sortCol = 'song'; sortDir = 'asc';
+        this.classList.add('active');
+        document.getElementById('sortArtist').classList.remove('active');
+        render();
+    });
+
+    document.getElementById('sortArtist').addEventListener('click', function() {
+        sortCol = 'artist'; sortDir = 'asc';
+        this.classList.add('active');
+        document.getElementById('sortAZ').classList.remove('active');
+        render();
+    });
+
+    // --- Event: clear filters ---------------------------------
+    document.getElementById('clearFilters').addEventListener('click', () => {
+        activeGenre = 'all'; activeDecade = 'all';
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.value === 'all');
+        });
+        render();
+    });
+
+    // --- Fetch CSV and initialise ----------------------------
+    fetch(CSV_URL)
+        .then(r => { if (!r.ok) throw new Error('Failed to fetch'); return r.text(); })
+        .then(text => {
+            allSongs = parseCSV(text);
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('totalSongs').textContent = allSongs.length;
+            buildFilters(allSongs);
+            render();
+        })
+        .catch(err => {
+            document.getElementById('loadingState').innerHTML =
+                '<p>Couldn\'t load the setlist right now. <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRLhCzPFQvhWAsQFLB94ddm_wybQhSFwqjW3d5FYeE-RC0j5V34tK8B9fdhGtJ84uyAzlhlsnEebeIJ/pubhtml?gid=568675691" target="_blank" style="color:var(--blue-light)">View on Google Sheets</a> instead.</p>';
+            console.error(err);
+        });
+
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+
+</body>
+</html>
