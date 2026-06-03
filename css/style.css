@@ -185,8 +185,8 @@ em { font-style: italic; color: var(--red); }
 .nav-logo img { height: 48px; width: auto; }
 
 @media (max-width: 640px) {
-    .nav-logo img {
-        height: 28px;
+    .nav-logo {
+        display: none;
     }
 }
 .nav-links {
@@ -276,22 +276,41 @@ em { font-style: italic; color: var(--red); }
 }
 
 @media (max-width: 640px) {
-    .hero-img {
-        object-position: center 10%;
-    }
     .hero {
-        min-height: 60vh;
+        min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+    }
+    .hero-bg {
+        position: absolute;
+        inset: 0;
+        height: 100%;
+    }
+    .hero-img {
+        object-fit: cover;
+        object-position: 30% 10%;
+        height: 100%;
+        width: 100%;
+    }
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        margin-top: auto;
+        padding-bottom: 4rem;
+    }
+    .hero-logo {
+        margin-top: 0;
+        max-width: 260px;
     }
 }
-
 .hero-overlay {
     position: absolute;
     inset: 0;
     background: linear-gradient(
         to bottom,
-        rgba(17,18,20,0.55) 0%,
-        rgba(17,18,20,0.4) 40%,
-        rgba(17,18,20,0.8) 100%
+        rgba(17,18,20,0.25) 0%,
+        rgba(17,18,20,0.15) 40%,
+        rgba(17,18,20,0.6) 100%
     );
 }
 
