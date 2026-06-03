@@ -258,16 +258,24 @@ em { font-style: italic; color: var(--red); }
 
 /* In style.css, find .hero-img and change to: */
 .hero-img {
-    object-position: center center;  /* or 'top center' */
+    object-position: center 15%;
 }
 
-/* Add this for mobile specifically */
-@media (max-width: 640px) {
+@media (max-width: 900px) {
     .hero-img {
-        object-position: center 20%;
+        object-position: center 10%;
     }
     .hero {
-        min-height: 70vh; /* reduce height on mobile so less is cropped */
+        min-height: 75vh;
+    }
+}
+
+@media (max-width: 640px) {
+    .hero-img {
+        object-position: center 10%;
+    }
+    .hero {
+        min-height: 60vh;
     }
 }
 
