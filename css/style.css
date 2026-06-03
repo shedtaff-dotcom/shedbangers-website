@@ -247,11 +247,28 @@ em { font-style: italic; color: var(--red); }
     inset: 0;
 }
 
+/*
 .hero-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center top;
+}
+*/
+
+/* In style.css, find .hero-img and change to: */
+.hero-img {
+    object-position: center center;  /* or 'top center' */
+}
+
+/* Add this for mobile specifically */
+@media (max-width: 640px) {
+    .hero-img {
+        object-position: center 20%;
+    }
+    .hero {
+        min-height: 70vh; /* reduce height on mobile so less is cropped */
+    }
 }
 
 .hero-overlay {
