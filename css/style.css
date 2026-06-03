@@ -184,6 +184,11 @@ em { font-style: italic; color: var(--red); }
 
 .nav-logo img { height: 48px; width: auto; }
 
+@media (max-width: 640px) {
+    .nav-logo img {
+        height: 28px;
+    }
+}
 .nav-links {
     display: flex;
     list-style: none;
@@ -316,6 +321,20 @@ em { font-style: italic; color: var(--red); }
     width: 100%;
     height: auto;
     filter: drop-shadow(0 4px 24px rgba(0,0,0,0.5));
+}
+
+@media (max-width: 640px) {
+    .hero {
+        min-height: 100svh; /* full screen height on mobile */
+    }
+    
+    .hero-img {
+        object-position: 30% 10%; /* shift right slightly to lose Jim's face coverage */
+    }
+
+    .hero-content {
+        padding-top: calc(var(--nav-h) + 1rem);
+    }
 }
 
 .hero-tagline {
