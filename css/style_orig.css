@@ -240,7 +240,7 @@ em { font-style: italic; color: var(--red); }
     position: relative;
     min-height: 100vh;
     display: flex;
-    align-items: flex-end;  /* 👈 change from center */
+    align-items: center;
     justify-content: center;
     text-align: center;
     color: var(--off-white);
@@ -252,11 +252,57 @@ em { font-style: italic; color: var(--red); }
     inset: 0;
 }
 
+/*
 .hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+}
+*/
 
+/* In style.css, find .hero-img and change to: */
+.hero-img {
     object-position: center 15%;
 }
 
+@media (max-width: 900px) {
+    .hero-img {
+        object-position: center 10%;
+    }
+    .hero {
+        min-height: 75vh;
+    }
+}
+
+@media (max-width: 640px) {
+    .hero {
+        min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+    }
+    .hero-bg {
+        position: absolute;
+        inset: 0;
+        height: 100%;
+    }
+    .hero-img {
+        object-fit: cover;
+        object-position: 30% 10%;
+        height: 100%;
+        width: 100%;
+    }
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        margin-top: auto;
+        padding-bottom: 4rem;
+    }
+    .hero-logo {
+        margin-top: 0;
+        max-width: 260px;
+    }
+}
 .hero-overlay {
     position: absolute;
     inset: 0;
@@ -268,6 +314,7 @@ em { font-style: italic; color: var(--red); }
     );
 }
 
+/* Grain texture overlay — matches flyer aesthetic */
 .hero-grain {
     position: absolute;
     inset: 0;
@@ -285,13 +332,28 @@ em { font-style: italic; color: var(--red); }
 
 .hero-logo {
     margin: 0 auto 1.5rem;
-    max-width: 480px;
+    max-width: 760px;
+    margin-top: 10rem;   /* 👈 add this — increase until it clears your face */
 }
 
 .hero-logo img {
     width: 100%;
     height: auto;
     filter: drop-shadow(0 4px 24px rgba(0,0,0,0.5));
+}
+
+@media (max-width: 640px) {
+    .hero {
+        min-height: 100svh; /* full screen height on mobile */
+    }
+    
+    .hero-img {
+        object-position: 30% 10%; /* shift right slightly to lose Jim's face coverage */
+    }
+
+    .hero-content {
+        padding-top: calc(var(--nav-h) + 1rem);
+    }
 }
 
 .hero-tagline {
@@ -332,52 +394,6 @@ em { font-style: italic; color: var(--red); }
 }
 .hero-scroll:hover { color: var(--off-white); }
 
-@keyframes bounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50%       { transform: translateX(-50%) translateY(8px); }
-}
-
-/* --- HERO RESPONSIVE -------------------------------------- */
-@media (max-width: 900px) {
-    .hero {
-        min-height: 75vh;
-        align-items: flex-end; /* push content to bottom */
-    }
-    .hero-img {
-        object-position: center 10%;
-    }
-    .hero-content {
-        padding-bottom: 3rem;
-    }
-    .hero-logo {
-        margin-top: 0;
-        max-width: 260px;
-    }
-
-}
-
-
-
-@media (max-width: 640px) {
-    .hero {
-        min-height: 100svh;
-        align-items: flex-end;
-    }
-    .hero-img {
-        object-position: center 8%;
-    }
-    .hero-content {
-        padding-top: 0;
-        padding-bottom: 13rem;
-    }
-    .hero-logo {
-        margin-top: 0;
-        max-width: 260px;
-    }
-    .nav-logo {
-        display: none;
-    }
-}
 @keyframes bounce {
     0%, 100% { transform: translateX(-50%) translateY(0); }
     50% { transform: translateX(-50%) translateY(8px); }
