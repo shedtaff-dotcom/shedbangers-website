@@ -160,6 +160,45 @@
             color: var(--blue-light);
         }
 
+        /* Mobile: native selects */
+        .filter-select {
+            display: none;
+            font-family: var(--font-cond);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--off-white);
+            padding: 0.5rem 2rem 0.5rem 0.75rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            flex: 1;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(245,240,232,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 12px;
+        }
+
+        .filter-select option { background: var(--dark-2); color: var(--off-white); }
+
+        .filter-select.has-selection {
+            border-color: var(--red);
+            background-color: rgba(192,57,43,0.2);
+        }
+
+        @media (max-width: 640px) {
+            .filter-group,
+            .filter-divider,
+            .filter-label,
+            #sortAZ,
+            #sortArtist { display: none; }
+            .filter-select { display: block; }
+            .controls-inner { gap: 0.5rem; }
+        }
+
         /* ---- Song count ---- */
         .setlist-count {
             max-width: var(--max-w);
@@ -397,6 +436,7 @@
     <!-- STICKY FILTERS -->
     <div class="setlist-controls">
         <div class="controls-inner">
+            <!-- Desktop: pill buttons -->
             <span class="filter-label">Genre</span>
             <div class="filter-group" id="genreFilters">
                 <button class="filter-btn active" data-filter="genre" data-value="all">All</button>
@@ -409,6 +449,14 @@
             <div class="filter-divider"></div>
             <button class="sort-btn active" id="sortAZ" title="Sort A–Z">A–Z</button>
             <button class="sort-btn" id="sortArtist" title="Sort by Artist">Artist</button>
+
+            <!-- Mobile: native selects -->
+            <select class="filter-select" id="genreSelect">
+                <option value="all">All Genres</option>
+            </select>
+            <select class="filter-select" id="decadeSelect">
+                <option value="all">All Decades</option>
+            </select>
         </div>
     </div>
 
@@ -507,11 +555,12 @@
         }).filter(r => r.song);
     }
 
-    // --- Build filter buttons ---------------------------------
+    // --- Build filter buttons and mobile selects -------------
     function buildFilters(songs) {
         const genres  = [...new Set(songs.map(s => s.genre).filter(Boolean))].sort();
         const decades = [...new Set(songs.map(s => s.decade).filter(Boolean))].sort();
 
+        // Desktop pill buttons
         const gContainer = document.getElementById('genreFilters');
         genres.forEach(g => {
             const btn = document.createElement('button');
@@ -530,6 +579,36 @@
             btn.dataset.value = d;
             btn.textContent = d;
             dContainer.appendChild(btn);
+        });
+
+        // Mobile selects
+        const gSelect = document.getElementById('genreSelect');
+        genres.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g;
+            opt.textContent = g;
+            gSelect.appendChild(opt);
+        });
+
+        const dSelect = document.getElementById('decadeSelect');
+        decades.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.textContent = d;
+            dSelect.appendChild(opt);
+        });
+
+        // Mobile select events
+        gSelect.addEventListener('change', function() {
+            activeGenre = this.value;
+            this.classList.toggle('has-selection', this.value !== 'all');
+            render();
+        });
+
+        dSelect.addEventListener('change', function() {
+            activeDecade = this.value;
+            this.classList.toggle('has-selection', this.value !== 'all');
+            render();
         });
     }
 
