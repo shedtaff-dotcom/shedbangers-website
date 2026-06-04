@@ -184,11 +184,6 @@ em { font-style: italic; color: var(--red); }
 
 .nav-logo img { height: 48px; width: auto; }
 
-@media (max-width: 640px) {
-    .nav-logo {
-        display: none;
-    }
-}
 .nav-links {
     display: flex;
     list-style: none;
@@ -239,9 +234,8 @@ em { font-style: italic; color: var(--red); }
 .hero {
     position: relative;
     min-height: 100vh;
-    max-height: 900px;
     display: flex;
-    align-items: center;  /* 👈 change from center */
+    align-items: center;
     justify-content: center;
     text-align: center;
     color: var(--off-white);
@@ -251,15 +245,13 @@ em { font-style: italic; color: var(--red); }
 .hero-bg {
     position: absolute;
     inset: 0;
-    height: 100%;
-    overflow: hidden;
 }
 
 .hero-img {
-
-    object-position: center 15%;
     width: 100%;
-    
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
 }
 
 .hero-overlay {
@@ -267,12 +259,13 @@ em { font-style: italic; color: var(--red); }
     inset: 0;
     background: linear-gradient(
         to bottom,
-        rgba(17,18,20,0.25) 0%,
-        rgba(17,18,20,0.15) 40%,
-        rgba(17,18,20,0.6) 100%
+        rgba(17,18,20,0.55) 0%,
+        rgba(17,18,20,0.4) 40%,
+        rgba(17,18,20,0.8) 100%
     );
 }
 
+/* Grain texture overlay — matches flyer aesthetic */
 .hero-grain {
     position: absolute;
     inset: 0;
@@ -289,7 +282,7 @@ em { font-style: italic; color: var(--red); }
 }
 
 .hero-logo {
-    margin:  18rem auto 1.5rem;
+    margin: 0 auto 1.5rem;
     max-width: 480px;
 }
 
@@ -337,69 +330,6 @@ em { font-style: italic; color: var(--red); }
 }
 .hero-scroll:hover { color: var(--off-white); }
 
-.hero-strap {
-    background: var(--dark);
-    padding: 2rem 1.5rem;
-    text-align: center;
-    border-bottom: 3px solid var(--red);
-}
-
-.hero-strap .hero-tagline {
-    color: var(--blue-light);
-    margin-bottom: 0.5rem;
-}
-
-.hero-strap .hero-sub {
-    color: rgba(245,240,232,0.7);
-    margin-bottom: 1.5rem;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50%       { transform: translateX(-50%) translateY(8px); }
-}
-
-/* --- HERO RESPONSIVE -------------------------------------- */
-@media (max-width: 900px) {
-    .hero {
-        min-height: 75vh;
-        align-items: flex-end; /* push content to bottom */
-    }
-    .hero-img {
-        object-position: center 10%;
-    }
-    .hero-content {
-        padding-bottom: 3rem;
-    }
-    .hero-logo {
-        margin-top: 0;
-        max-width: 260px;
-    }
-
-}
-
-
-
-@media (max-width: 640px) {
-    .hero {
-        min-height: 100svh;
-        align-items: flex-end;
-    }
-    .hero-img {
-        object-position: center 8%;
-    }
-    .hero-content {
-        padding-top: 0;
-        padding-bottom: 6rem;
-    }
-    .hero-logo {
-        margin-top: 0;
-        max-width: 260px;
-    }
-    .nav-logo {
-        display: none;
-    }
-}
 @keyframes bounce {
     0%, 100% { transform: translateX(-50%) translateY(0); }
     50% { transform: translateX(-50%) translateY(8px); }
@@ -687,52 +617,6 @@ em { font-style: italic; color: var(--red); }
     border-radius: 2rem;
     white-space: nowrap;
 }
-
-.gig-year {
-    display: block;
-    font-family: var(--font-cond);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    color: var(--text-mid);
-}
-
-.gig-badge--private {
-    font-family: var(--font-cond);
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    background: var(--blue);
-    color: #fff;
-    padding: 0.3rem 0.75rem;
-    border-radius: 2rem;
-    white-space: nowrap;
-}
-
-.gig-venue-link {
-    color: var(--blue);
-    text-decoration: none;
-    transition: color var(--transition);
-}
-.gig-venue-link:hover { color: var(--red); text-decoration: underline; }
-
-.gigs-loading {
-    text-align: center;
-    padding: 2rem;
-}
-
-.gigs-spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid rgba(0,0,0,0.08);
-    border-top-color: var(--red);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
 
 .gigs-empty {
     text-align: center;
