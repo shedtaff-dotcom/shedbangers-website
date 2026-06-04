@@ -238,14 +238,15 @@ em { font-style: italic; color: var(--red); }
 /* --- HERO ------------------------------------------------- */
 .hero {
     position: relative;
-    min-height: 100vh;
-    max-height: 900px;
+    min-height: 70vh;
+    max-height: 200px;
     display: flex;
-    align-items: center;  /* 👈 change from center */
+    align-items: center;
     justify-content: center;
     text-align: center;
     color: var(--off-white);
     overflow: hidden;
+    
 }
 
 .hero-bg {
@@ -253,6 +254,8 @@ em { font-style: italic; color: var(--red); }
     inset: 0;
     height: 100%;
     overflow: hidden;
+    padding: 2rem 1.5rem;
+    margin:  2rem auto 1.5rem;
 }
 
 .hero-img {
@@ -289,7 +292,7 @@ em { font-style: italic; color: var(--red); }
 }
 
 .hero-logo {
-    margin:  18rem auto 1.5rem;
+    margin:  8rem auto 1.5rem;
     max-width: 480px;
 }
 
@@ -382,15 +385,18 @@ em { font-style: italic; color: var(--red); }
 
 @media (max-width: 640px) {
     .hero {
-        min-height: 100svh;
+        min-height: 60svh;
         align-items: flex-end;
     }
     .hero-img {
         object-position: center 8%;
     }
+    .hero-scroll {
+        bottom: 0rem;
+    }
     .hero-content {
         padding-top: 0;
-        padding-bottom: 6rem;
+        padding-bottom: 0rem;
     }
     .hero-logo {
         margin-top: 0;
