@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frenchie's Sweepstake – World Cup 2026 | The Shedbangers</title>
+  <meta name="description" content="Frenchie's World Cup 2026 Sweepstake – team draw, leaderboard and party games." />
+
+  <!-- Fonts: Bebas Neue + Barlow to match main site -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600&display=swap" rel="stylesheet" />
+
+  <!-- React + ReactDOM (production, CDN) -->
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
+  <!-- Babel standalone – transpiles JSX in the browser -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: #111214;
+      color: #F5F0E8;
+      font-family: 'Barlow', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    #root { min-height: 100vh; }
+
+    /* Loading state shown until React mounts */
+    #loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 16px;
+      color: #FFD700;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 3px;
+    }
+    #loading .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #333;
+      border-top-color: #FFD700;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Back-to-site nav bar */
+    #site-nav {
+      background: #0d0d0f;
+      border-bottom: 1px solid #1e1e22;
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.85rem;
+    }
+    #site-nav a {
+      color: #888;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    #site-nav a:hover { color: #F5F0E8; }
+    #site-nav .sep { color: #333; }
+    #site-nav .current { color: #FFD700; }
+
+    /* Print styles */
+    @media print {
+      #site-nav { display: none; }
+      body { background: white; color: black; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Breadcrumb nav back to main site -->
+  <nav id="site-nav">
+    <a href="/">The Shedbangers</a>
+    <span class="sep">›</span>
+    <span class="current">Frenchie's Sweepstake 2026</span>
+  </nav>
+
+  <!-- Loading fallback -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <span>Loading the draw...</span>
+  </div>
+
+  <!-- React mounts here -->
+  <div id="root"></div>
+
+  <!-- Load the sweepstake component -->
+  <!-- type="text/babel" tells Babel standalone to transpile this file -->
+  <script type="text/babel" src="./sweepstake.jsx" data-presets="react"></script>
+
+  <script>
+    // Remove the loading spinner once React has mounted
+    const observer = new MutationObserver(() => {
+      const root = document.getElementById('root');
+      if (root && root.children.length > 0) {
+        document.getElementById('loading').style.display = 'none';
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.getElementById('root'), { childList: true });
+  </script>
+
+</body>
+</html>
