@@ -13,11 +13,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- GLightbox (photo gallery) --------------------------
+if (typeof GLightbox !== 'undefined') {
     const lightbox = GLightbox({
         touchNavigation: true,
         loop: true,
         autoplayVideos: false
     });
+}
 
     // --- Navbar: add .scrolled class on scroll --------------
     const navbar = document.getElementById('navbar');
