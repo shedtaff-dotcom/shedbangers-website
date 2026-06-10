@@ -4,379 +4,830 @@
 const { useState, useEffect, useRef } = React;
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
-const SHEET_ID = "1AW5_It2evEtGySBDrL5wJ7H-SfmX_wPQG3sUVAqUznE";
-const CSV = (sheet) =>
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${sheet}`;
+// Published spreadsheet ID (from File -> Share -> Publish to web URL)
+const PUB_ID = "2PACX-1vRm-ufKNgAVjNicy9TrTR6zwx4F8L9zLoyiZyiQxrMjbpv8pFSJNzYFTpVTIs8w1gmyGoP_mbzC9Ipq";
+// Tab gids (from edit URL when clicking each tab: ...#gid=NUMBER)
+const TAB_IDS = {
+  "FinalDraw": "276613855",
+  "Status":    "12183942",
+  "GB":        "1062655705",
+  "Results":   "921171610",
+};
+// Use the published ID with gid — this is the correct public CSV endpoint
+const SHEET_URL = (sheet) => {
+  const gid = TAB_IDS[sheet];
+  return `https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pub?output=csv&single=true&gid=${gid}`;
+};
+const IS_ADMIN = typeof window !== "undefined" &&
+                 window.location.search.includes("admin=true");
+
+// ─── POINTS SYSTEM ───────────────────────────────────────────────────────────
+const PTS = {
+  WIN: 3, DRAW: 1,
+  R16: 5, QF: 10, SF: 15, THIRD: 20, "RUNNER UP": 25, WINNER: 50,
+  GB_GOAL: 5, GB_BONUS: 10,   // bonus auto-awarded to top scorer
+};
+
+const PRIZES = { winner: 40, goldenBoot: 10, pointsTable: 10 };
 
 // ─── TEAMS ───────────────────────────────────────────────────────────────────
 const TEAMS = [
-  // Tier 1 — top seeds
-  { rank: 1,  name: "France",         flag: "🇫🇷", tier: 1 },
-  { rank: 2,  name: "Spain",          flag: "🇪🇸", tier: 1 },
-  { rank: 3,  name: "Argentina",      flag: "🇦🇷", tier: 1 },
-  { rank: 4,  name: "England",        flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", tier: 1 },
-  { rank: 5,  name: "Portugal",       flag: "🇵🇹", tier: 1 },
-  { rank: 6,  name: "Brazil",         flag: "🇧🇷", tier: 1 },
-  { rank: 7,  name: "Netherlands",    flag: "🇳🇱", tier: 1 },
-  { rank: 8,  name: "Morocco",        flag: "🇲🇦", tier: 1 },
-  { rank: 9,  name: "Belgium",        flag: "🇧🇪", tier: 1 },
-  { rank: 10, name: "Germany",        flag: "🇩🇪", tier: 1 },
-  { rank: 11, name: "Croatia",        flag: "🇭🇷", tier: 1 },
-  { rank: 13, name: "Colombia",       flag: "🇨🇴", tier: 1 },
-  // Tier 2
-  { rank: 14, name: "Senegal",        flag: "🇸🇳", tier: 2 },
-  { rank: 15, name: "Mexico",         flag: "🇲🇽", tier: 2 },
-  { rank: 16, name: "USA",            flag: "🇺🇸", tier: 2 },
-  { rank: 17, name: "Uruguay",        flag: "🇺🇾", tier: 2 },
-  { rank: 18, name: "Japan",          flag: "🇯🇵", tier: 2 },
-  { rank: 19, name: "Switzerland",    flag: "🇨🇭", tier: 2 },
-  { rank: 21, name: "Iran",           flag: "🇮🇷", tier: 2 },
-  { rank: 23, name: "Austria",        flag: "🇦🇹", tier: 2 },
-  { rank: 24, name: "Ecuador",        flag: "🇪🇨", tier: 2 },
-  { rank: 25, name: "South Korea",    flag: "🇰🇷", tier: 2 },
-  { rank: 26, name: "Australia",      flag: "🇦🇺", tier: 2 },
-  { rank: 29, name: "Egypt",          flag: "🇪🇬", tier: 2 },
-  // Tier 3
-  { rank: 30, name: "Canada",         flag: "🇨🇦", tier: 3 },
-  { rank: 33, name: "Ivory Coast",    flag: "🇨🇮", tier: 3 },
-  { rank: 35, name: "Qatar",          flag: "🇶🇦", tier: 3 },
-  { rank: 36, name: "Algeria",        flag: "🇩🇿", tier: 3 },
-  { rank: 39, name: "Sweden",         flag: "🇸🇪", tier: 3 },
-  { rank: 40, name: "Tunisia",        flag: "🇹🇳", tier: 3 },
-  { rank: 41, name: "Czechia",        flag: "🇨🇿", tier: 3 },
-  { rank: 42, name: "Turkiye",        flag: "🇹🇷", tier: 3 },
-  { rank: 44, name: "Norway",         flag: "🇳🇴", tier: 3 },
-  { rank: 47, name: "Scotland",       flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", tier: 3 },
-  { rank: 51, name: "DR Congo",       flag: "🇨🇩", tier: 3 },
-  { rank: 52, name: "Bosnia & Herz.", flag: "🇧🇦", tier: 3 },
-  { rank: 53, name: "Panama",         flag: "🇵🇦", tier: 3 },
-  { rank: 57, name: "Saudi Arabia",   flag: "🇸🇦", tier: 3 },
-  { rank: 60, name: "South Africa",   flag: "🇿🇦", tier: 3 },
-  { rank: 61, name: "Iraq",           flag: "🇮🇶", tier: 3 },
-  { rank: 62, name: "Uzbekistan",     flag: "🇺🇿", tier: 3 },
-  { rank: 64, name: "Paraguay",       flag: "🇵🇾", tier: 3 },
-  { rank: 65, name: "Ghana",          flag: "🇬🇭", tier: 3 },
-  { rank: 68, name: "Jordan",         flag: "🇯🇴", tier: 3 },
-  { rank: 70, name: "Cape Verde",     flag: "🇨🇻", tier: 3 },
-  { rank: 81, name: "Curazao",        flag: "🇨🇼", tier: 3 },
-  { rank: 83, name: "Haiti",          flag: "🇭🇹", tier: 3 },
-  { rank: 95, name: "New Zealand",    flag: "🇳🇿", tier: 3 },
+  { rank:1,  name:"France",         flag:"🇫🇷", tier:1 },
+  { rank:2,  name:"Spain",          flag:"🇪🇸", tier:1 },
+  { rank:3,  name:"Argentina",      flag:"🇦🇷", tier:1 },
+  { rank:4,  name:"England",        flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", tier:1 },
+  { rank:5,  name:"Portugal",       flag:"🇵🇹", tier:1 },
+  { rank:6,  name:"Brazil",         flag:"🇧🇷", tier:1 },
+  { rank:7,  name:"Netherlands",    flag:"🇳🇱", tier:1 },
+  { rank:8,  name:"Morocco",        flag:"🇲🇦", tier:1 },
+  { rank:9,  name:"Belgium",        flag:"🇧🇪", tier:1 },
+  { rank:10, name:"Germany",        flag:"🇩🇪", tier:1 },
+  { rank:11, name:"Croatia",        flag:"🇭🇷", tier:1 },
+  { rank:13, name:"Colombia",       flag:"🇨🇴", tier:1 },
+  { rank:14, name:"Senegal",        flag:"🇸🇳", tier:2 },
+  { rank:15, name:"Mexico",         flag:"🇲🇽", tier:2 },
+  { rank:16, name:"USA",            flag:"🇺🇸", tier:2 },
+  { rank:17, name:"Uruguay",        flag:"🇺🇾", tier:2 },
+  { rank:18, name:"Japan",          flag:"🇯🇵", tier:2 },
+  { rank:19, name:"Switzerland",    flag:"🇨🇭", tier:2 },
+  { rank:21, name:"Iran",           flag:"🇮🇷", tier:2 },
+  { rank:23, name:"Austria",        flag:"🇦🇹", tier:2 },
+  { rank:24, name:"Ecuador",        flag:"🇪🇨", tier:2 },
+  { rank:25, name:"South Korea",    flag:"🇰🇷", tier:2 },
+  { rank:26, name:"Australia",      flag:"🇦🇺", tier:2 },
+  { rank:29, name:"Egypt",          flag:"🇪🇬", tier:2 },
+  { rank:30, name:"Canada",         flag:"🇨🇦", tier:3 },
+  { rank:33, name:"Ivory Coast",    flag:"🇨🇮", tier:3 },
+  { rank:35, name:"Qatar",          flag:"🇶🇦", tier:3 },
+  { rank:36, name:"Algeria",        flag:"🇩🇿", tier:3 },
+  { rank:39, name:"Sweden",         flag:"🇸🇪", tier:3 },
+  { rank:40, name:"Tunisia",        flag:"🇹🇳", tier:3 },
+  { rank:41, name:"Czechia",        flag:"🇨🇿", tier:3 },
+  { rank:42, name:"Turkiye",        flag:"🇹🇷", tier:3 },
+  { rank:44, name:"Norway",         flag:"🇳🇴", tier:3 },
+  { rank:47, name:"Scotland",       flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", tier:3 },
+  { rank:51, name:"DR Congo",       flag:"🇨🇩", tier:3 },
+  { rank:52, name:"Bosnia & Herz.", flag:"🇧🇦", tier:3 },
+  { rank:53, name:"Panama",         flag:"🇵🇦", tier:3 },
+  { rank:57, name:"Saudi Arabia",   flag:"🇸🇦", tier:3 },
+  { rank:60, name:"South Africa",   flag:"🇿🇦", tier:3 },
+  { rank:61, name:"Iraq",           flag:"🇮🇶", tier:3 },
+  { rank:62, name:"Uzbekistan",     flag:"🇺🇿", tier:3 },
+  { rank:64, name:"Paraguay",       flag:"🇵🇾", tier:3 },
+  { rank:65, name:"Ghana",          flag:"🇬🇭", tier:3 },
+  { rank:68, name:"Jordan",         flag:"🇯🇴", tier:3 },
+  { rank:70, name:"Cape Verde",     flag:"🇨🇻", tier:3 },
+  { rank:81, name:"Curazao",        flag:"🇨🇼", tier:3 },
+  { rank:83, name:"Haiti",          flag:"🇭🇹", tier:3 },
+  { rank:95, name:"New Zealand",    flag:"🇳🇿", tier:3 },
 ];
 
-// ─── GOLDEN BOOT ─────────────────────────────────────────────────────────────
-// Sorted best odds first (lowest number = favourite = assigned to weakest draw)
-const GOLDEN_BOOT = [
-  { name: "Harry Kane",           team: "England",     odds: "8/1"  },
-  { name: "Kylian Mbappe",        team: "France",      odds: "9/1"  },
-  { name: "Erling Haaland",       team: "Norway",      odds: "10/1" },
-  { name: "Cristiano Ronaldo",    team: "Portugal",    odds: "12/1" },
-  { name: "Lamine Yamal",         team: "Spain",       odds: "14/1" },
-  { name: "Jude Bellingham",      team: "England",     odds: "16/1" },
-  { name: "Vinicius Junior",      team: "Brazil",      odds: "16/1" },
-  { name: "Lionel Messi",         team: "Argentina",   odds: "18/1" },
-  { name: "Julian Alvarez",       team: "Argentina",   odds: "20/1" },
-  { name: "Romelu Lukaku",        team: "Belgium",     odds: "20/1" },
-  { name: "Marcus Rashford",      team: "England",     odds: "22/1" },
-  { name: "Rafael Leao",          team: "Portugal",    odds: "25/1" },
-  { name: "Bukayo Saka",          team: "England",     odds: "25/1" },
-  { name: "Lautaro Martinez",     team: "Argentina",   odds: "28/1" },
-  { name: "Phil Foden",           team: "England",     odds: "28/1" },
-  { name: "Kai Havertz",          team: "Germany",     odds: "30/1" },
-  { name: "Federico Chiesa",      team: "Italy",       odds: "33/1" },
-  { name: "Florian Wirtz",        team: "Germany",     odds: "33/1" },
-  { name: "Khvicha Kvaratskhelia",team: "Georgia",     odds: "33/1" },
-  { name: "Darwin Nunez",         team: "Uruguay",     odds: "35/1" },
-  { name: "Dusan Vlahovic",       team: "Serbia",      odds: "40/1" },
-  { name: "Victor Osimhen",       team: "Nigeria",     odds: "40/1" },
-  { name: "Rasmus Hojlund",       team: "Denmark",     odds: "45/1" },
-  { name: "Jamal Musiala",        team: "Germany",     odds: "50/1" },
-  { name: "Cody Gakpo",           team: "Netherlands", odds: "50/1" },
-  { name: "Memphis Depay",        team: "Netherlands", odds: "55/1" },
-  { name: "Olivier Giroud",       team: "France",      odds: "60/1" },
-  { name: "Alvaro Morata",        team: "Spain",       odds: "66/1" },
-  { name: "Gabriel Jesus",        team: "Brazil",      odds: "70/1" },
-  { name: "Son Heung-min",        team: "South Korea", odds: "75/1" },
-];
+function teamInfo(name) {
+  return TEAMS.find(t => t.name.toLowerCase() === (name||"").toLowerCase()) ||
+         { flag:"🏳️", tier:3, rank:"?" };
+}
 
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-const TIER_COLOR = { 1: "#FFD700", 2: "#C0C0C0", 3: "#CD7F32" };
-const TIER_LABEL = { 1: "Top Seeds", 2: "Mid Seeds", 3: "Underdogs" };
+// ─── STATUS HELPERS ───────────────────────────────────────────────────────────
+const KNOCKOUT_PTS = { R16:5, QF:10, SF:15, THIRD:20, "RUNNER UP":25, WINNER:50 };
+const STAGE_LABEL  = {
+  WINNER:      { label:"🏆 Winner",      color:"#FFD700" },
+  "RUNNER UP": { label:"🥈 Runner Up",   color:"#C0C0C0" },
+  THIRD:       { label:"🥉 3rd",         color:"#CD7F32" },
+  SF:          { label:"⚽ Semi Final",  color:"#90CDF4" },
+  QF:          { label:"⚽ Quarter Final",color:"#63B3ED"},
+  R16:         { label:"R16",            color:"#888"    },
+  OUT:         { label:"❌ Out",          color:"#555"    },
+  IN:          { label:"",               color:""        },
+};
 
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+function normaliseStatus(s) {
+  if (!s) return "IN";
+  const u = s.toUpperCase().trim();
+  if (u === "IN" || u === "") return "IN";
+  if (u === "OUT" || u.startsWith("OUT") || u==="GS"||u==="R1"||u==="R2"||u==="R3") return "OUT";
+  if (KNOCKOUT_PTS[u] !== undefined) return u;
+  return "IN";
+}
+
+function isEliminated(status) {
+  return status === "OUT";
+}
+
+function isStillIn(status) {
+  return status !== "OUT";
+}
+
+// ─── CSV PARSER ───────────────────────────────────────────────────────────────
+function parseCSVRow(row) {
+  const result = []; let cur = "", inQ = false;
+  for (let i = 0; i < row.length; i++) {
+    const c = row[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(cur.trim()); cur = ""; }
+    else { cur += c; }
   }
-  return a;
-}
-
-// Parse a simple single-column CSV (Name header, one name per row)
-function parseNameCSV(text) {
-  return text
-    .split("\n")
-    .map(r => r.replace(/^"|"$/g, "").trim())
-    .filter(r => r && r.toLowerCase() !== "name");
-}
-
-// Parse the Draw tab CSV — detect LOCKED state from first data row
-function parseDrawCSV(text) {
-  const rows = text.split("\n").map(r =>
-    r.split(",").map(c => c.replace(/^"|"$/g, "").trim())
-  ).filter(r => r.some(c => c));
-
-  if (!rows.length) return { locked: false, entries: [] };
-
-  // Check for LOCKED row — first cell = "LOCKED", second = "TRUE"
-  const lockedRow = rows.find(r => r[0].toUpperCase() === "LOCKED");
-  const locked = lockedRow ? lockedRow[1].toUpperCase() === "TRUE" : false;
-
-  // Skip header and LOCKED rows, parse entries
-  const entries = rows
-    .filter(r => r[0].toUpperCase() !== "LOCKED" && r[0].toUpperCase() !== "NAME" && r[0])
-    .map(r => ({
-      name:       r[0] || "",
-      team1:      r[1] || "",
-      team1Rank:  r[2] || "",
-      team2:      r[3] || "",
-      team2Rank:  r[4] || "",
-      goldenBoot: r[5] || "",
-    }))
-    .filter(e => e.name && e.team1);
-
-  return { locked, entries };
-}
-
-function buildDraw(participants) {
-  const n = participants.length;
-  const tier1  = shuffle(TEAMS.filter(t => t.tier === 1));
-  const rest   = shuffle(TEAMS.filter(t => t.tier !== 1));
-
-  // Everyone gets one tier-1 team first
-  const result = participants.map((name, i) => ({
-    name,
-    teams: [tier1[i % tier1.length]],
-    goldenBoot: null,
-  }));
-
-  // Distribute remaining 36 teams across all participants
-  const remaining    = [...tier1.slice(n), ...rest];
-  const shuffledIdx  = shuffle([...Array(n).keys()]);
-  remaining.forEach((team, i) => {
-    result[shuffledIdx[i % n]].teams.push(team);
-  });
-
-  // ── Assign Golden Boot ────────────────────────────────────────────────────
-  // Score each participant: sum of FIFA rankings (higher = weaker draw)
-  // Weakest draw gets the best Golden Boot pick (lowest odds = index 0)
-  const scored = result
-    .map((p, i) => ({
-      idx:   i,
-      score: p.teams.reduce((sum, t) => sum + t.rank, 0),
-    }))
-    .sort((a, b) => b.score - a.score); // descending: weakest first
-
-  const gbPool = [...GOLDEN_BOOT];
-  // Pad pool if more participants than GB entries
-  while (gbPool.length < n) gbPool.push(...GOLDEN_BOOT);
-
-  scored.forEach((s, rank) => {
-    result[s.idx].goldenBoot = gbPool[rank % gbPool.length];
-  });
-
+  result.push(cur.trim());
   return result;
 }
 
-// Format draw results as TSV rows for easy pasting into the Draw sheet
-function drawToClipboard(draw) {
-  const header = "Name\tTeam1\tTeam1_Rank\tTeam2\tTeam2_Rank\tGoldenBoot";
-  const rows = draw.map(e => {
-    const t1 = e.teams[0] || {};
-    const t2 = e.teams[1] || {};
-    const gb = e.goldenBoot ? `${e.goldenBoot.name} (${e.goldenBoot.odds})` : "";
-    return [e.name, t1.name||"", t1.rank||"", t2.name||"", t2.rank||"", gb].join("\t");
+function parseSheet(text, hasHeader=true) {
+  const rows = text.split("\n").map(parseCSVRow).filter(r=>r.some(c=>c));
+  return hasHeader ? rows.slice(1) : rows;
+}
+
+function parseFinalDraw(text) {
+  const stripHash = s => (s||"").replace(/^#/, "").trim();
+  return parseSheet(text).map(r => ({
+    name:     r[0]||"",  team1:    r[1]||"", rank1: stripHash(r[2]),
+    team2:    r[3]||"",  rank2:    stripHash(r[4]), team3: r[5]||"",
+    rank3:    stripHash(r[6]),     team4:    r[7]||"", rank4: stripHash(r[8]),
+    gbPlayer: r[9]||"",  gbTeam:   r[10]||"",
+  // Filter: must have a name that looks like a person (not a stray number/empty row)
+  })).filter(e => e.name && e.team1 && isNaN(e.name.trim()));
+}
+
+function parseStatusTab(text) {
+  const map = {};
+  parseSheet(text).forEach(r => {
+    if (r[0]) map[r[0].trim()] = normaliseStatus(r[1]||"");
   });
-  return [header, ...rows].join("\n");
+  return map;
+}
+
+function parseGBTab(text) {
+  // Name, Goals
+  const list = parseSheet(text).map(r => ({
+    name:  r[0]||"",
+    goals: parseInt(r[1]||"0", 10) || 0,
+  })).filter(e=>e.name);
+  return list;
+}
+
+function parseResultsTab(text) {
+  // HomeTeam, HomeGoals, AwayTeam, AwayGoals
+  return parseSheet(text).map(r => ({
+    home:      r[0]||"",
+    homeGoals: r[1]===""||r[1]===undefined ? null : parseInt(r[1],10),
+    away:      r[2]||"",
+    awayGoals: r[3]===""||r[3]===undefined ? null : parseInt(r[3],10),
+  })).filter(r => r.home && r.away &&
+                  r.homeGoals !== null && r.awayGoals !== null &&
+                  !isNaN(r.homeGoals) && !isNaN(r.awayGoals));
+}
+
+// ─── SCORE CALCULATION ────────────────────────────────────────────────────────
+function calcPoints(entries, statusMap, results, gbList) {
+  // Build team win/draw counts from results
+  const teamWins  = {};
+  const teamDraws = {};
+  results.forEach(r => {
+    if (r.homeGoals > r.awayGoals) {
+      teamWins[r.home]  = (teamWins[r.home]  || 0) + 1;
+    } else if (r.homeGoals < r.awayGoals) {
+      teamWins[r.away]  = (teamWins[r.away]  || 0) + 1;
+    } else {
+      teamDraws[r.home] = (teamDraws[r.home] || 0) + 1;
+      teamDraws[r.away] = (teamDraws[r.away] || 0) + 1;
+    }
+  });
+
+  // GB goals map  name -> goals
+  const gbGoals = {};
+  gbList.forEach(g => { gbGoals[g.name] = g.goals; });
+
+  // Top GB scorer(s) — used for bonus
+  const maxGoals = gbList.length ? Math.max(...gbList.map(g=>g.goals)) : 0;
+  const topScorers = new Set(gbList.filter(g=>g.goals===maxGoals&&g.goals>0).map(g=>g.name));
+
+  // Build GB player -> entry map
+  const gbPlayerToEntry = {};
+  entries.forEach(e => { gbPlayerToEntry[e.gbPlayer] = e.name; });
+
+  const scores = entries.map(entry => {
+    const myTeams = [
+      { name:entry.team1, rank:entry.rank1 },
+      { name:entry.team2, rank:entry.rank2 },
+      { name:entry.team3, rank:entry.rank3 },
+      { name:entry.team4, rank:entry.rank4 },
+    ].filter(t=>t.name);
+
+    let matchPts    = 0;
+    let knockoutPts = 0;
+    let gbPts       = 0;
+    const breakdown = [];
+
+    myTeams.forEach(t => {
+      const wins  = teamWins[t.name]  || 0;
+      const draws = teamDraws[t.name] || 0;
+      const wp    = wins  * PTS.WIN;
+      const dp    = draws * PTS.DRAW;
+      matchPts += wp + dp;
+      if (wins)  breakdown.push(`${t.name}: ${wins}W=${wp}pts`);
+      if (draws) breakdown.push(`${t.name}: ${draws}D=${dp}pts`);
+
+      const stage = statusMap[t.name] || "IN";
+      const kp    = KNOCKOUT_PTS[stage] || 0;
+      knockoutPts += kp;
+      if (kp) breakdown.push(`${t.name} ${stage}: ${kp}pts`);
+    });
+
+    // GB points
+    const goals = gbGoals[entry.gbPlayer] || 0;
+    gbPts += goals * PTS.GB_GOAL;
+    if (goals) breakdown.push(`${entry.gbPlayer}: ${goals} goals=${goals*PTS.GB_GOAL}pts`);
+    if (topScorers.has(entry.gbPlayer) && maxGoals > 0) {
+      gbPts += PTS.GB_BONUS;
+      breakdown.push(`GB Winner bonus: ${PTS.GB_BONUS}pts`);
+    }
+
+    const total = matchPts + knockoutPts + gbPts;
+    return {
+      name: entry.name,
+      total, matchPts, knockoutPts, gbPts,
+      breakdown,
+      gbPlayer:  entry.gbPlayer,
+      gbGoals:   goals,
+      gbTeam:    entry.gbTeam,
+      isTopGB:   topScorers.has(entry.gbPlayer),
+      teams:     myTeams,
+    };
+  });
+
+  return scores.sort((a,b) => b.total - a.total);
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+const TIER_COLOR = { 1:"#FFD700", 2:"#C0C0C0", 3:"#CD7F32" };
+
+function teamsForEntry(entry) {
+  return [
+    { name:entry.team1, rank:entry.rank1 },
+    { name:entry.team2, rank:entry.rank2 },
+    { name:entry.team3, rank:entry.rank3 },
+    { name:entry.team4, rank:entry.rank4 },
+  ].filter(t=>t.name);
 }
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600&display=swap');
-  @keyframes fadeUp  { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes slideIn { from{opacity:0;transform:translateX(-14px) scale(.97)} to{opacity:1;transform:translateX(0) scale(1)} }
-  @keyframes twinkle { from{opacity:.15;transform:scale(1)} to{opacity:.7;transform:scale(1.6)} }
-  @keyframes spin    { to{transform:rotate(360deg)} }
-  .fade-up  { animation:fadeUp .6s ease both }
-  .slide-in { animation:slideIn .3s ease both }
+  @keyframes fadeUp  {from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes slideIn {from{opacity:0;transform:translateX(-12px) scale(.97)}to{opacity:1;transform:translateX(0) scale(1)}}
+  @keyframes twinkle {from{opacity:.1;transform:scale(1)}to{opacity:.55;transform:scale(1.5)}}
+  @keyframes spin    {to{transform:rotate(360deg)}}
+  @keyframes popIn   {0%{transform:scale(.8);opacity:0}70%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+  .fade-up  {animation:fadeUp .5s ease both}
+  .slide-in {animation:slideIn .28s ease both}
+  .pop-in   {animation:popIn .4s ease both}
   .btn {
-    font-family:'Bebas Neue',sans-serif;
-    letter-spacing:2px; font-size:1rem;
-    padding:12px 28px; border:none; border-radius:3px;
+    font-family:'Bebas Neue',sans-serif; letter-spacing:2px;
+    font-size:.95rem; padding:11px 26px; border:none; border-radius:3px;
     cursor:pointer; transition:transform .15s,box-shadow .15s;
   }
-  .btn:hover  { transform:translateY(-2px) }
-  .btn:active { transform:translateY(0) }
-  .btn-red    { background:linear-gradient(135deg,#C0392B,#e74c3c);color:#fff }
-  .btn-red:hover  { box-shadow:0 4px 20px #C0392B99 }
-  .btn-gold   { background:linear-gradient(135deg,#b8860b,#FFD700);color:#111 }
-  .btn-gold:hover { box-shadow:0 4px 20px #FFD70099 }
-  .btn-ghost  { background:transparent;color:#F5F0E8;border:1px solid #444 }
-  .btn-ghost:hover{ border-color:#FFD700;color:#FFD700 }
+  .btn:hover  {transform:translateY(-2px)}
+  .btn:active {transform:translateY(0)}
+  .btn-red   {background:linear-gradient(135deg,#C0392B,#e74c3c);color:#fff}
+  .btn-red:hover  {box-shadow:0 4px 20px #C0392B99}
+  .btn-gold  {background:linear-gradient(135deg,#b8860b,#FFD700);color:#111}
+  .btn-gold:hover {box-shadow:0 4px 20px #FFD70099}
+  .btn-ghost {background:transparent;color:#F5F0E8;border:1px solid #333}
+  .btn-ghost:hover{border-color:#FFD700;color:#FFD700}
   .card {
-    background:rgba(255,255,255,.04);
-    border:1px solid rgba(255,215,0,.15);
-    border-radius:6px; padding:16px;
-    transition:transform .2s;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,215,0,.15);
+    border-radius:6px; padding:16px; transition:transform .2s,opacity .2s;
   }
-  .card:hover { transform:translateY(-2px) }
-  input[type=text],textarea {
-    background:rgba(0,0,0,.5); border:1px solid #333;
-    border-radius:3px; color:#F5F0E8;
-    font-family:'Barlow',sans-serif; font-size:1rem;
+  .card:hover {transform:translateY(-2px)}
+  .card.eliminated {opacity:.4}
+  .card.eliminated:hover {opacity:.65;transform:translateY(-2px)}
+  .tab {
+    font-family:'Bebas Neue',sans-serif; letter-spacing:2px; font-size:.9rem;
+    padding:10px 20px; border:none; border-bottom:2px solid transparent;
+    background:transparent; color:#666; cursor:pointer; transition:all .2s;
+  }
+  .tab.active {color:#FFD700;border-bottom-color:#FFD700}
+  .tab:hover  {color:#F5F0E8}
+  input[type=text] {
+    background:rgba(0,0,0,.5); border:1px solid #333; border-radius:3px;
+    color:#F5F0E8; font-family:'Barlow',sans-serif; font-size:1rem;
     padding:10px 14px; outline:none; transition:border-color .2s;
   }
-  input[type=text]:focus,textarea:focus { border-color:#FFD700 }
-  .locked-badge {
-    display:inline-block; background:#C0392B22;
-    border:1px solid #C0392B88; color:#e74c3c;
-    font-family:'Bebas Neue',sans-serif; letter-spacing:2px;
-    font-size:.8rem; padding:4px 12px; border-radius:3px;
-  }
+  input[type=text]:focus {border-color:#FFD700}
   .gb-pill {
     display:inline-flex; align-items:center; gap:6px;
-    background:rgba(255,215,0,.1); border:1px solid rgba(255,215,0,.3);
-    border-radius:3px; padding:4px 10px; font-size:.82rem;
+    background:rgba(255,215,0,.07); border:1px solid rgba(255,215,0,.2);
+    border-radius:3px; padding:4px 10px; font-size:.82rem; width:100%;
+  }
+  .pts-bar-fill {
+    height:100%; border-radius:2px;
+    background:linear-gradient(90deg,#C0392B,#FFD700);
+    transition:width .6s ease;
   }
   @media print {
-    #site-nav,.no-print { display:none!important }
-    body { background:white!important;color:black!important }
-    .card { border:1px solid #ccc!important;background:white!important }
+    #site-nav,.no-print{display:none!important}
+    body{background:white!important;color:black!important}
+    .card{border:1px solid #ccc!important;background:white!important;opacity:1!important}
   }
 `;
 
+// ─── TEAM ROW ─────────────────────────────────────────────────────────────────
+function TeamRow({ name, rank, statusMap, primary }) {
+  const info   = teamInfo(name);
+  const status = statusMap[name] || "IN";
+  const sl     = STAGE_LABEL[status] || STAGE_LABEL.IN;
+  const out    = isEliminated(status);
+
+  return (
+    <div style={{
+      display:"flex", alignItems:"center", gap:9,
+      padding:"5px 9px", borderRadius:3,
+      background: status==="WINNER"  ? "rgba(255,215,0,.1)"
+                : status==="RUNNER UP"?"rgba(192,192,192,.08)"
+                : primary            ? "rgba(255,215,0,.06)"
+                :                      "rgba(255,255,255,.02)",
+      border:`1px solid ${TIER_COLOR[info.tier]}1a`,
+      opacity: out ? 0.5 : 1,
+    }}>
+      <span style={{ fontSize:"1.05rem" }}>{info.flag}</span>
+      <span style={{
+        flex:1, fontSize:".88rem",
+        color: out ? "#444" : primary ? "#F5F0E8" : "#999",
+        textDecoration: out ? "line-through" : "none",
+      }}>{name}</span>
+      {sl.label && (
+        <span style={{ fontSize:".68rem", color:sl.color, whiteSpace:"nowrap" }}>{sl.label}</span>
+      )}
+      <span style={{
+        fontSize:".65rem", padding:"2px 5px", borderRadius:3,
+        background:TIER_COLOR[info.tier]+"22", color:TIER_COLOR[info.tier],
+        border:`1px solid ${TIER_COLOR[info.tier]}44`,
+      }}>#{rank||info.rank}</span>
+    </div>
+  );
+}
+
+// ─── LEADERBOARD TAB ─────────────────────────────────────────────────────────
+function Leaderboard({ scores, gbList }) {
+  const maxPts   = scores.length ? scores[0].total : 1;
+  const maxGoals = gbList.length ? Math.max(...gbList.map(g=>g.goals)) : 0;
+  const [expanded, setExpanded] = useState(null);
+
+  return (
+    <div className="fade-up">
+      {/* Points table */}
+      <div style={{ marginBottom:32 }}>
+        <p style={{ fontFamily:"'Bebas Neue',sans-serif", letterSpacing:2, color:"#FFD700", fontSize:".85rem", marginBottom:14 }}>
+          📊 POINTS TABLE
+        </p>
+        {scores.map((s, i) => {
+          const isOpen = expanded === i;
+          const medal  = i===0?"🥇":i===1?"🥈":i===2?"🥉":"";
+          return (
+            <div key={i} style={{ marginBottom:8 }}>
+              <div
+                onClick={() => setExpanded(isOpen ? null : i)}
+                style={{
+                  display:"flex", alignItems:"center", gap:12,
+                  padding:"10px 14px", borderRadius:4,
+                  background: i===0 ? "rgba(255,215,0,.08)" : "rgba(255,255,255,.03)",
+                  border:`1px solid ${i===0?"rgba(255,215,0,.25)":"#222"}`,
+                  cursor:"pointer", transition:"background .2s",
+                }}
+              >
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", color:"#555", fontSize:".85rem", width:20, textAlign:"right" }}>
+                  {i+1}
+                </span>
+                <span style={{ fontSize:"1rem" }}>{medal}</span>
+                <span style={{ flex:1, color: i===0?"#FFD700":"#F5F0E8", fontFamily:"'Bebas Neue',sans-serif", letterSpacing:1 }}>
+                  {s.name}
+                </span>
+                {/* breakdown toggle */}
+                <span style={{ color:"#444", fontSize:".75rem" }}>{isOpen?"▲":"▼"}</span>
+                {/* pts bar */}
+                <div style={{ width:80, height:6, background:"#1a1a1a", borderRadius:3, flexShrink:0 }}>
+                  <div className="pts-bar-fill" style={{ width:`${maxPts?Math.round((s.total/maxPts)*100):0}%` }}/>
+                </div>
+                <span style={{
+                  fontFamily:"'Bebas Neue',sans-serif", letterSpacing:1,
+                  color: i===0?"#FFD700":"#F5F0E8", fontSize:"1.1rem", width:52, textAlign:"right"
+                }}>{s.total} <span style={{ color:"#555", fontSize:".7rem" }}>pts</span></span>
+              </div>
+
+              {/* Breakdown */}
+              {isOpen && (
+                <div style={{
+                  background:"rgba(0,0,0,.3)", border:"1px solid #1a1a1a",
+                  borderTop:"none", borderRadius:"0 0 4px 4px",
+                  padding:"12px 14px",
+                }}>
+                  <div style={{ display:"flex", gap:20, flexWrap:"wrap", marginBottom:10 }}>
+                    {[
+                      { label:"Match results", val:s.matchPts },
+                      { label:"Knockout stage", val:s.knockoutPts },
+                      { label:"Golden Boot",    val:s.gbPts },
+                    ].map((b,bi) => (
+                      <div key={bi} style={{ textAlign:"center" }}>
+                        <div style={{ color:"#555", fontSize:".72rem", marginBottom:2 }}>{b.label}</div>
+                        <div style={{ color:"#F5F0E8", fontFamily:"'Bebas Neue',sans-serif", fontSize:"1.2rem" }}>{b.val}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {s.breakdown.length > 0 && (
+                    <div style={{ borderTop:"1px solid #1a1a1a", paddingTop:8 }}>
+                      {s.breakdown.map((b,bi) => (
+                        <div key={bi} style={{ color:"#555", fontSize:".78rem", lineHeight:1.8 }}>· {b}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Golden Boot scoreboard */}
+      <div>
+        <p style={{ fontFamily:"'Bebas Neue',sans-serif", letterSpacing:2, color:"#FFD700", fontSize:".85rem", marginBottom:14 }}>
+          👟 GOLDEN BOOT RACE
+        </p>
+        {gbList.length === 0 && (
+          <p style={{ color:"#444", fontSize:".88rem" }}>No goals recorded yet.</p>
+        )}
+        {gbList
+          .slice()
+          .sort((a,b) => b.goals - a.goals)
+          .map((g, i) => {
+            const pct = maxGoals ? Math.round((g.goals/maxGoals)*100) : 0;
+            const isTop = g.goals === maxGoals && maxGoals > 0;
+            return (
+              <div key={i} style={{
+                display:"flex", alignItems:"center", gap:12,
+                padding:"8px 14px", marginBottom:6, borderRadius:4,
+                background: isTop ? "rgba(255,215,0,.07)" : "rgba(255,255,255,.02)",
+                border:`1px solid ${isTop?"rgba(255,215,0,.2)":"#1a1a1a"}`,
+              }}>
+                <span style={{ color:"#555", fontSize:".82rem", width:18, textAlign:"right" }}>{i+1}</span>
+                <span style={{ flex:1, color: isTop?"#FFD700":"#aaa", fontSize:".92rem" }}>{g.name}</span>
+                <div style={{ width:80, height:5, background:"#1a1a1a", borderRadius:3, flexShrink:0 }}>
+                  <div className="pts-bar-fill" style={{ width:`${pct}%` }}/>
+                </div>
+                <span style={{
+                  fontFamily:"'Bebas Neue',sans-serif", color: isTop?"#FFD700":"#F5F0E8",
+                  fontSize:"1rem", width:40, textAlign:"right"
+                }}>
+                  {g.goals} <span style={{ color:"#555", fontSize:".7rem" }}>⚽</span>
+                </span>
+                {isTop && <span style={{ fontSize:".75rem", color:"#FFD700" }}>👟</span>}
+              </div>
+            );
+          })
+        }
+      </div>
+    </div>
+  );
+}
+
+// ─── DRAW TAB ─────────────────────────────────────────────────────────────────
+function DrawTab({ entries, statusMap, scores }) {
+  const [search, setSearch]   = useState("");
+  const [filter, setFilter]   = useState("all");
+
+  // Attach score to each entry for display
+  const scoreMap = {};
+  scores.forEach(s => { scoreMap[s.name] = s; });
+
+  const filtered = entries.filter(e => {
+    const teams   = teamsForEntry(e);
+    const anyIn   = teams.some(t => isStillIn(statusMap[t.name]||"IN"));
+    if (filter==="active"     && !anyIn) return false;
+    if (filter==="eliminated" &&  anyIn) return false;
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return e.name.toLowerCase().includes(q) ||
+      teams.some(t=>t.name.toLowerCase().includes(q)) ||
+      e.gbPlayer.toLowerCase().includes(q);
+  });
+
+  return (
+    <div className="fade-up">
+      <div style={{ display:"flex", gap:10, flexWrap:"wrap", justifyContent:"center", marginBottom:20 }}>
+        <input type="text"
+          placeholder="🔍  Search player, team or Golden Boot..."
+          value={search} onChange={e=>setSearch(e.target.value)}
+          style={{ width:"min(300px,100%)" }}
+        />
+        <div style={{ display:"flex", gap:6 }}>
+          {[["all","All"],["active","Still In"],["eliminated","Eliminated"]].map(([v,l])=>(
+            <button key={v} className="btn btn-ghost"
+              style={{
+                padding:"8px 14px", fontSize:".78rem",
+                borderColor:filter===v?"#FFD700":"#333",
+                color:filter===v?"#FFD700":"#555",
+              }}
+              onClick={()=>setFilter(v)}
+            >{l}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:12 }}>
+        {filtered.map((entry, i) => {
+          const teams  = teamsForEntry(entry);
+          const anyIn  = teams.some(t=>isStillIn(statusMap[t.name]||"IN"));
+          const sc     = scoreMap[entry.name];
+          const gbOut  = isEliminated(statusMap[entry.gbTeam]||"IN");
+
+          return (
+            <div key={i} className={`card slide-in${!anyIn?" eliminated":""}`}
+              style={{ animationDelay:`${i*.03}s` }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                <span style={{
+                  fontFamily:"'Bebas Neue',sans-serif", letterSpacing:1, fontSize:"1.1rem",
+                  color: !anyIn?"#555":"#FFD700",
+                }}>{entry.name}</span>
+                {sc && (
+                  <span style={{
+                    fontFamily:"'Bebas Neue',sans-serif", fontSize:".9rem",
+                    color:"#F5F0E8", background:"rgba(255,255,255,.06)",
+                    border:"1px solid #333", borderRadius:3, padding:"2px 8px"
+                  }}>{sc.total} pts</span>
+                )}
+              </div>
+
+              <div style={{ display:"flex", flexDirection:"column", gap:5, marginBottom:8 }}>
+                {teams.map((t,ti)=>(
+                  <TeamRow key={ti} name={t.name} rank={t.rank}
+                    statusMap={statusMap} primary={ti===0}/>
+                ))}
+              </div>
+
+              <div className="gb-pill" style={{ opacity:gbOut?.4:1 }}>
+                <span>👟</span>
+                <span style={{
+                  flex:1, color:gbOut?"#444":"#FFD700", fontSize:".85rem",
+                  textDecoration:gbOut?"line-through":"none"
+                }}>{entry.gbPlayer}</span>
+                {sc && sc.gbGoals > 0 && (
+                  <span style={{ color:"#888", fontSize:".78rem" }}>
+                    {sc.gbGoals}⚽ = {sc.gbPts}pts
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+        {!filtered.length && (
+          <p style={{ color:"#444", gridColumn:"1/-1", textAlign:"center", padding:40 }}>
+            No results for "{search}"
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── PRIZES PANEL ─────────────────────────────────────────────────────────────
+function PrizesPanel({ entries, statusMap, scores, gbList }) {
+  const winner    = entries.find(e=>teamsForEntry(e).some(t=>(statusMap[t.name]||"").toUpperCase()==="WINNER"));
+  const runnerUp  = entries.find(e=>teamsForEntry(e).some(t=>(statusMap[t.name]||"").toUpperCase()==="RUNNER UP"));
+  const maxGoals  = gbList.length ? Math.max(...gbList.map(g=>g.goals)) : 0;
+  const gbWinPlayer = maxGoals > 0
+    ? gbList.filter(g=>g.goals===maxGoals).map(g=>g.name)
+    : [];
+  const gbWinner  = entries.find(e=>gbWinPlayer.includes(e.gbPlayer));
+  const ptsWinner = scores.length ? scores[0] : null;
+
+  const prizes = [
+    { label:"🏆 Tournament Winner", amount:`£${PRIZES.winner}`,      winner:winner?.name,              note:"Team wins the World Cup" },
+    { label:"👟 Golden Boot",       amount:`£${PRIZES.goldenBoot}`,  winner:gbWinner ? `${gbWinner.name} (${gbWinPlayer[0]})` : null, note:`Most goals scored${maxGoals>0?` — ${maxGoals} goals`:""}` },
+    { label:"📊 Points Table",      amount:`£${PRIZES.pointsTable}`, winner:ptsWinner?.name,           note:"Top of the leaderboard at full time" },
+  ];
+
+  const anyDecided = prizes.some(p=>p.winner);
+
+  return (
+    <div className="card fade-up" style={{
+      borderColor:"rgba(255,215,0,.25)", marginBottom:24,
+      background:"rgba(255,215,0,.03)"
+    }}>
+      <p style={{ fontFamily:"'Bebas Neue',sans-serif", letterSpacing:2, color:"#FFD700", fontSize:".88rem", marginBottom:14 }}>
+        💰 PRIZE MONEY — £{PRIZES.winner + PRIZES.goldenBoot + PRIZES.pointsTable} POT
+      </p>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:10 }}>
+        {prizes.map((p,i)=>(
+          <div key={i} style={{
+            padding:"14px", borderRadius:4,
+            background:"rgba(255,255,255,.03)", border:"1px solid #222"
+          }}>
+            <div style={{ color:"#888", fontSize:".78rem", marginBottom:4 }}>{p.label}</div>
+            <div style={{
+              color:"#FFD700", fontFamily:"'Bebas Neue',sans-serif",
+              fontSize:"1.6rem", letterSpacing:1, lineHeight:1
+            }}>{p.amount}</div>
+            <div style={{ color:p.winner?"#F5F0E8":"#333", fontSize:".88rem", marginTop:6 }}>
+              {p.winner || "TBC"}
+            </div>
+            <div style={{ color:"#444", fontSize:".72rem", marginTop:4 }}>{p.note}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
+function AdminPanel() {
+  if (!IS_ADMIN) return null;
+  return (
+    <div className="card no-print" style={{ borderColor:"#2B6CB033", marginBottom:20 }}>
+      <p style={{ fontFamily:"'Bebas Neue',sans-serif", letterSpacing:2, color:"#90CDF4", fontSize:".85rem", marginBottom:10 }}>
+        🔧 ADMIN — FRENCHIE ONLY
+      </p>
+      <div style={{ color:"#888", fontSize:".85rem", lineHeight:2 }}>
+        <strong style={{ color:"#F5F0E8" }}>Status tab</strong> — Team | Status &nbsp;
+        <span style={{ color:"#555" }}>Values: IN · OUT · R16 · QF · SF · THIRD · RUNNER UP · WINNER</span><br/>
+        <strong style={{ color:"#F5F0E8" }}>GB tab</strong> — Name | Goals &nbsp;
+        <span style={{ color:"#555" }}>Update goals after each match. Top scorer wins £{PRIZES.goldenBoot}.</span><br/>
+        <strong style={{ color:"#F5F0E8" }}>Results tab</strong> — HomeTeam | HomeGoals | AwayTeam | AwayGoals &nbsp;
+        <span style={{ color:"#555" }}>Leave goals blank for unplayed matches.</span><br/>
+        <span style={{ color:"#444" }}>Share URL (no admin): theshedbangers.co.uk/sweepstake</span>
+      </div>
+    </div>
+  );
+}
+
+
+// ─── SCORING GUIDE ────────────────────────────────────────────────────────────
+function ScoringGuide() {
+  const sections = [
+    {
+      title: "🏆 Match Results",
+      subtitle: "Frenchie updates the Results tab after every game",
+      rows: [
+        { event: "Your team wins a match",  pts: "+3 pts", note: "Per win, all stages" },
+        { event: "Your team draws a match", pts: "+1 pt",  note: "Per draw, all stages" },
+        { event: "Your team loses",         pts: "0 pts",  note: "No points for a loss" },
+      ]
+    },
+    {
+      title: "⚽ Knockout Stage Bonuses",
+      subtitle: "Awarded when your team reaches each round",
+      rows: [
+        { event: "Team reaches Round of 16", pts: "+5 pts",  note: "On qualification" },
+        { event: "Team reaches Quarter Final", pts: "+10 pts", note: "Cumulative — stacks" },
+        { event: "Team reaches Semi Final",  pts: "+15 pts", note: "Cumulative — stacks" },
+        { event: "Team finishes 3rd",        pts: "+20 pts", note: "3rd place play-off" },
+        { event: "Team is Runner Up",        pts: "+25 pts", note: "Reaches the final" },
+        { event: "Team wins the World Cup",  pts: "+50 pts", note: "🏆 The big one" },
+      ]
+    },
+    {
+      title: "👟 Golden Boot",
+      subtitle: "Each player is assigned a Golden Boot contender",
+      rows: [
+        { event: "Your player scores a goal", pts: "+5 pts",  note: "Every goal counts" },
+        { event: "Your player wins the Golden Boot", pts: "+10 pts bonus", note: "Most goals at end of tournament — auto awarded" },
+      ]
+    },
+    {
+      title: "💰 Prize Money",
+      subtitle: "£60 total pot",
+      rows: [
+        { event: "🏆 Tournament Winner",  pts: "£40", note: "Whose team lifts the trophy" },
+        { event: "👟 Golden Boot",        pts: "£10", note: "Whose player scores the most" },
+        { event: "📊 Points Table",       pts: "£10", note: "Top of the leaderboard at full time" },
+      ]
+    },
+  ];
+
+  return (
+    <div className="fade-up">
+      <p style={{ color:"#888", fontSize:".85rem", textAlign:"center", marginBottom:28, lineHeight:1.7 }}>
+        You have 4 teams and 1 Golden Boot player.<br/>
+        Points accumulate throughout the tournament — check back after every round.
+      </p>
+
+      {sections.map((section, si) => (
+        <div key={si} style={{ marginBottom:28 }}>
+          <div style={{ marginBottom:12 }}>
+            <p style={{ fontFamily:"'Bebas Neue',sans-serif", letterSpacing:2, color:"#FFD700", fontSize:"1rem", marginBottom:2 }}>
+              {section.title}
+            </p>
+            <p style={{ color:"#555", fontSize:".78rem" }}>{section.subtitle}</p>
+          </div>
+          <div style={{
+            background:"rgba(255,255,255,.03)", border:"1px solid #1a1a1a",
+            borderRadius:6, overflow:"hidden"
+          }}>
+            {section.rows.map((row, ri) => (
+              <div key={ri} style={{
+                display:"flex", alignItems:"center", gap:12,
+                padding:"11px 16px",
+                borderBottom: ri < section.rows.length-1 ? "1px solid #151515" : "none",
+                background: ri % 2 === 0 ? "transparent" : "rgba(255,255,255,.015)",
+              }}>
+                <span style={{ flex:1, color:"#d0c8bc", fontSize:".9rem" }}>{row.event}</span>
+                <span style={{
+                  fontFamily:"'Bebas Neue',sans-serif", letterSpacing:1,
+                  fontSize:"1rem", color:"#FFD700",
+                  minWidth:80, textAlign:"right", flexShrink:0
+                }}>{row.pts}</span>
+                <span style={{
+                  color:"#444", fontSize:".75rem",
+                  minWidth:160, textAlign:"right", flexShrink:0
+                }}>{row.note}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <div className="card" style={{ borderColor:"rgba(255,215,0,.2)", background:"rgba(255,215,0,.03)", marginTop:8 }}>
+        <p style={{ fontFamily:"'Bebas Neue',sans-serif", letterSpacing:2, color:"#FFD700", fontSize:".85rem", marginBottom:10 }}>
+          💡 EXAMPLE
+        </p>
+        <p style={{ color:"#888", fontSize:".85rem", lineHeight:1.9 }}>
+          Say you have <span style={{ color:"#F5F0E8" }}>England</span> — they win 3 group games (9pts), reach the QF (5+10pts), 
+          then go out. That's <span style={{ color:"#FFD700" }}>24pts</span> from England alone.<br/>
+          Your Golden Boot player <span style={{ color:"#F5F0E8" }}>Harry Kane</span> scores 4 goals — 
+          that's another <span style={{ color:"#FFD700" }}>20pts</span>.<br/>
+          Total from just those two: <span style={{ color:"#FFD700" }}>44pts</span> — and you still have 3 more teams to go.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 function Sweepstake() {
-  const [status,     setStatus]     = useState("loading"); // loading|setup|drawing|results|locked
-  const [loadError,  setLoadError]  = useState("");
-  const [names,      setNames]      = useState([]);
-  const [draw,       setDraw]       = useState([]);
-  const [lockedDraw, setLockedDraw] = useState([]);
-  const [revealed,   setRevealed]   = useState(new Set());
-  const [revealIdx,  setRevealIdx]  = useState(-1);
-  const [search,     setSearch]     = useState("");
-  const [copied,     setCopied]     = useState(false);
-  const autoRef = useRef(null);
+  const [status,    setStatus]    = useState("loading");
+  const [loadError, setLoadError] = useState("");
+  const [entries,   setEntries]   = useState([]);
+  const [statusMap, setStatusMap] = useState({});
+  const [gbList,    setGbList]    = useState([]);
+  const [results,   setResults]   = useState([]);
+  const [scores,    setScores]    = useState([]);
+  const [activeTab, setActiveTab] = useState("leaderboard");
 
-  // Inject CSS once
-  useEffect(() => {
+  useEffect(()=>{
     const s = document.createElement("style");
     s.textContent = CSS;
     document.head.appendChild(s);
-    return () => document.head.removeChild(s);
-  }, []);
+    return ()=>document.head.removeChild(s);
+  },[]);
 
-  // On mount: check Draw tab first (locked?), then load Participants
-  useEffect(() => { initialLoad(); }, []);
+  useEffect(()=>{ loadAll(); },[]);
 
-  async function initialLoad() {
+  async function fetchTab(name) {
+    const res = await fetch(SHEET_URL(name));
+    if (!res.ok) throw new Error(`${name} tab fetch failed (HTTP ${res.status})`);
+    let text = await res.text();
+    // gviz sometimes ignores tqx=out:csv for tab names with spaces and returns a JS wrapper.
+    // Retry with explicit headers=1 param which forces CSV output more reliably.
+    if (text.trim().startsWith("google.visualization") || text.trim().startsWith("/*")) {
+      const retry = await fetch(
+        `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}&headers=1`
+      ); // fallback
+      if (retry.ok) text = await retry.text();
+    }
+    if (text.includes('"errors":[{') || (text.trim().startsWith("{") && text.includes('"version"'))) {
+      throw new Error(`Tab "${name}" not found or not published to web`);
+    }
+    return text;
+  }
+
+  async function loadAll() {
     setStatus("loading");
     try {
-      // 1. Check Draw tab for a locked result
-      const drawRes  = await fetch(CSV("Draw"));
-      const drawText = await drawRes.text();
-      const { locked, entries } = parseDrawCSV(drawText);
+      const drawText = await fetchTab("FinalDraw");
+      const parsed   = parseFinalDraw(drawText);
+      if (!parsed.length) throw new Error("No data in FinalDraw tab — check sheet is published to web");
 
-      if (locked && entries.length) {
-        setLockedDraw(entries);
-        setStatus("locked");
-        return;
-      }
+      let stMap = {};
+      let gb    = [];
+      let res   = [];
 
-      // 2. Load participant names
-      const nameRes  = await fetch(CSV("Participants"));
-      const nameText = await nameRes.text();
-      const parsed   = parseNameCSV(nameText);
+      try { stMap = parseStatusTab(await fetchTab("Status")); }    catch(_){}
+      try { gb    = parseGBTab(await fetchTab("GB")); }             catch(_){}
+      try { res   = parseResultsTab(await fetchTab("Results")); }   catch(_){}
 
-      if (!parsed.length) {
-        setLoadError("No names found in the Participants tab. Add some names and refresh.");
-        setStatus("error");
-        return;
-      }
-
-      setNames(parsed);
-      setStatus("setup");
-    } catch (e) {
-      setLoadError("Couldn't reach the Google Sheet. Check it's published to the web.");
+      setEntries(parsed);
+      setStatusMap(stMap);
+      setGbList(gb);
+      setResults(res);
+      setScores(calcPoints(parsed, stMap, res, gb));
+      setStatus("ready");
+    } catch(e) {
+      setLoadError(e.message || "Couldn't load data. Check the sheet is published to web.");
       setStatus("error");
     }
   }
 
-  function runDraw() {
-    const result = buildDraw(names);
-    setDraw(result);
-    setRevealed(new Set());
-    setRevealIdx(-1);
-    setStatus("drawing");
-  }
+  const matchCount = results.length;
+  const activeCount = entries.filter(e=>
+    teamsForEntry(e).some(t=>isStillIn(statusMap[t.name]||"IN"))
+  ).length;
 
-  function revealNext() {
-    const next = revealIdx + 1;
-    if (next >= draw.length) { setStatus("results"); return; }
-    setRevealIdx(next);
-    setRevealed(prev => new Set([...prev, next]));
-  }
-
-  function revealAll() {
-    setRevealed(new Set(draw.map((_, i) => i)));
-    setRevealIdx(draw.length - 1);
-    setStatus("results");
-  }
-
-  function startAuto() {
-    autoRef.current = setInterval(() => {
-      setRevealIdx(prev => {
-        const next = prev + 1;
-        if (next >= draw.length) {
-          clearInterval(autoRef.current);
-          setStatus("results");
-          return prev;
-        }
-        setRevealed(r => new Set([...r, next]));
-        return next;
-      });
-    }, 700);
-  }
-
-  useEffect(() => () => clearInterval(autoRef.current), []);
-
-  async function copyForSheet() {
-    const tsv = drawToClipboard(draw);
-    try {
-      await navigator.clipboard.writeText(tsv);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
-    } catch {
-      // Fallback: create a textarea and copy from it
-      const ta = document.createElement("textarea");
-      ta.value = tsv;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
-    }
-  }
-
-  const pct      = draw.length ? (revealed.size / draw.length) * 100 : 0;
-  const filtered = (status === "results" ? draw : []).filter(d =>
-    !search ||
-    d.name.toLowerCase().includes(search.toLowerCase()) ||
-    d.teams.some(t => t.name.toLowerCase().includes(search.toLowerCase())) ||
-    (d.goldenBoot && d.goldenBoot.name.toLowerCase().includes(search.toLowerCase()))
-  );
-
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div style={{
       minHeight:"100vh",
@@ -384,328 +835,106 @@ function Sweepstake() {
       padding:"32px 16px 64px", position:"relative", overflow:"hidden",
       fontFamily:"'Barlow',sans-serif", color:"#F5F0E8"
     }}>
-
-      {/* Sparkles */}
-      {[...Array(18)].map((_,i) => (
+      {[...Array(16)].map((_,i)=>(
         <div key={i} style={{
           position:"fixed", borderRadius:"50%", pointerEvents:"none",
           width:i%3===0?3:2, height:i%3===0?3:2,
           background:i%4===0?"#FFD700":i%4===1?"#fff":"#C0392B",
-          left:`${(i*17+5)%100}%`, top:`${(i*13+8)%100}%`,
-          opacity:.25, animation:`twinkle ${2+(i%3)}s ease-in-out ${i*.25}s infinite alternate`
+          left:`${(i*17+5)%100}%`, top:`${(i*13+8)%100}%`, opacity:.18,
+          animation:`twinkle ${2+(i%3)}s ease-in-out ${i*.25}s infinite alternate`
         }}/>
       ))}
 
-      <div style={{ maxWidth:900, margin:"0 auto", position:"relative", zIndex:1 }}>
+      <div style={{ maxWidth:920, margin:"0 auto", position:"relative", zIndex:1 }}>
 
-        {/* ── Header (always shown) ── */}
-        <div className="fade-up" style={{ textAlign:"center", marginBottom:40 }}>
-          <div style={{ fontSize:"2.8rem", marginBottom:6 }}>⚽</div>
+        {/* Header */}
+        <div className="fade-up" style={{ textAlign:"center", marginBottom:32 }}>
+          <div style={{ fontSize:"2.4rem", marginBottom:4 }}>⚽</div>
           <h1 style={{
-            fontFamily:"'Bebas Neue',sans-serif",
-            fontSize:"clamp(2.8rem,7vw,5rem)",
-            letterSpacing:4, color:"#FFD700",
-            textShadow:"0 0 40px #FFD70055",
-            lineHeight:1, margin:"0 0 6px"
+            fontFamily:"'Bebas Neue',sans-serif", fontSize:"clamp(2.8rem,7vw,5rem)",
+            letterSpacing:4, color:"#FFD700", textShadow:"0 0 40px #FFD70055",
+            lineHeight:1, margin:"0 0 4px"
           }}>Frenchie's</h1>
           <h2 style={{
-            fontFamily:"'Bebas Neue',sans-serif",
-            fontSize:"clamp(1rem,2.5vw,1.5rem)",
-            letterSpacing:8, color:"#F5F0E8",
-            fontWeight:"normal", margin:"0 0 12px", opacity:.85
+            fontFamily:"'Bebas Neue',sans-serif", fontSize:"clamp(1rem,2.5vw,1.5rem)",
+            letterSpacing:8, color:"#F5F0E8", fontWeight:"normal",
+            margin:"0 0 10px", opacity:.85
           }}>World Cup 2026 Sweepstake</h2>
-          <div style={{ width:100, height:2, background:"linear-gradient(90deg,transparent,#FFD700,transparent)", margin:"0 auto 10px" }}/>
-          <p style={{ color:"#555", fontSize:".78rem", letterSpacing:3, textTransform:"uppercase" }}>
+          <div style={{ width:100, height:2, background:"linear-gradient(90deg,transparent,#FFD700,transparent)", margin:"0 auto 8px" }}/>
+          <p style={{ color:"#555", fontSize:".76rem", letterSpacing:3, textTransform:"uppercase" }}>
             USA · Canada · Mexico · 11 Jun – 19 Jul
           </p>
         </div>
 
-        {/* ════════ LOADING ════════ */}
-        {status === "loading" && (
+        {status==="loading" && (
           <div style={{ textAlign:"center", padding:"60px 0" }}>
-            <div style={{
-              width:36, height:36, border:"3px solid #222",
-              borderTopColor:"#FFD700", borderRadius:"50%",
-              animation:"spin .8s linear infinite", margin:"0 auto 16px"
-            }}/>
-            <p style={{ color:"#666", letterSpacing:2, textTransform:"uppercase", fontSize:".85rem" }}>
-              Loading draw data…
-            </p>
+            <div style={{ width:34, height:34, border:"3px solid #222", borderTopColor:"#FFD700", borderRadius:"50%", animation:"spin .8s linear infinite", margin:"0 auto 16px" }}/>
+            <p style={{ color:"#555", letterSpacing:2, fontSize:".8rem", textTransform:"uppercase" }}>Loading…</p>
           </div>
         )}
 
-        {/* ════════ ERROR ════════ */}
-        {status === "error" && (
-          <div className="card" style={{ textAlign:"center", padding:"40px", borderColor:"#C0392B44" }}>
-            <p style={{ color:"#e74c3c", fontSize:"1.1rem", marginBottom:16 }}>⚠️ {loadError}</p>
-            <button className="btn btn-ghost" onClick={initialLoad}>↺ Retry</button>
+        {status==="error" && (
+          <div className="card" style={{ textAlign:"center", padding:40, borderColor:"#C0392B44" }}>
+            <p style={{ color:"#e74c3c", marginBottom:16 }}>⚠️ {loadError}</p>
+            <button className="btn btn-ghost" onClick={loadAll}>↺ Retry</button>
           </div>
         )}
 
-        {/* ════════ SETUP ════════ */}
-        {status === "setup" && (
-          <div className="fade-up">
-            <div className="card" style={{ marginBottom:28, textAlign:"center" }}>
-              <p style={{ color:"#FFD700", fontFamily:"'Bebas Neue',sans-serif", letterSpacing:2, fontSize:".9rem", marginBottom:12 }}>
-                📋 PLAYERS LOADED FROM SHEET
-              </p>
-              <div style={{ display:"flex", flexWrap:"wrap", gap:8, justifyContent:"center", marginBottom:16 }}>
-                {names.map((n,i) => (
-                  <span key={i} style={{
-                    background:"rgba(255,215,0,.08)", border:"1px solid rgba(255,215,0,.2)",
-                    borderRadius:3, padding:"5px 12px", fontSize:".9rem", color:"#F5F0E8"
-                  }}>{n}</span>
-                ))}
-              </div>
-              <p style={{ color:"#555", fontSize:".82rem" }}>
-                {names.length} players · 48 teams · Golden Boot assigned by draw strength
-              </p>
-              <button className="btn btn-ghost no-print" style={{ marginTop:12, fontSize:".8rem", padding:"6px 14px" }} onClick={initialLoad}>
-                ↺ Refresh from sheet
-              </button>
-            </div>
-
-            <div style={{ textAlign:"center", marginBottom:40 }}>
-              <button className="btn btn-red" style={{ fontSize:"1.2rem", padding:"16px 48px" }} onClick={runDraw}>
-                🎰 Run the Draw
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ════════ DRAWING ════════ */}
-        {status === "drawing" && (
+        {status==="ready" && (
           <div>
-            <div style={{ textAlign:"center", marginBottom:24 }}>
-              <p style={{ color:"#888", fontSize:".8rem", letterSpacing:2, textTransform:"uppercase", marginBottom:8 }}>
-                {revealed.size} of {draw.length} revealed
-              </p>
-              <div style={{ height:4, background:"#1a1a1a", borderRadius:2 }}>
-                <div style={{
-                  height:"100%", borderRadius:2,
-                  width:`${pct}%`,
-                  background:"linear-gradient(90deg,#C0392B,#FFD700)",
-                  transition:"width .4s ease"
-                }}/>
-              </div>
+            <AdminPanel/>
+            <PrizesPanel entries={entries} statusMap={statusMap} scores={scores} gbList={gbList}/>
+
+            {/* Stats bar */}
+            <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap", marginBottom:20, fontSize:".8rem", color:"#555" }}>
+              <span>👥 {entries.length} players</span>
+              <span>·</span>
+              <span>⚽ {matchCount} matches played</span>
+              <span>·</span>
+              <span style={{ color:activeCount>0?"#90CDF4":"#555" }}>
+                🟢 {activeCount} still active
+              </span>
+              <span>·</span>
+              <span>💰 £{PRIZES.winner+PRIZES.goldenBoot+PRIZES.pointsTable} pot</span>
             </div>
 
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))", gap:12, marginBottom:24 }}>
-              {draw.map((entry, i) => (
-                <div key={i} className={revealed.has(i) ? "card slide-in" : "card"} style={{
-                  minHeight:100,
-                  borderColor:revealed.has(i)?"rgba(255,215,0,.3)":"rgba(255,255,255,.06)",
-                  background:revealed.has(i)?"rgba(255,215,0,.06)":"rgba(255,255,255,.03)",
-                  display:"flex", flexDirection:"column", justifyContent:"center"
-                }}>
-                  <p style={{ color:"#FFD700", fontFamily:"'Bebas Neue',sans-serif", letterSpacing:1, fontSize:"1.05rem", marginBottom:8 }}>
-                    {entry.name}
-                  </p>
-                  {revealed.has(i) ? (
-                    <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
-                      {entry.teams.map((t, ti) => (
-                        <div key={ti} style={{ display:"flex", alignItems:"center", gap:8, fontSize:".88rem" }}>
-                          <span>{t.flag}</span>
-                          <span style={{ color:ti===0?"#F5F0E8":"#777", flex:1 }}>{t.name}</span>
-                          <span style={{
-                            fontSize:".7rem", padding:"2px 6px", borderRadius:3,
-                            background:TIER_COLOR[t.tier]+"22", color:TIER_COLOR[t.tier],
-                            border:`1px solid ${TIER_COLOR[t.tier]}44`
-                          }}>#{t.rank}</span>
-                        </div>
-                      ))}
-                      {entry.goldenBoot && (
-                        <div style={{ marginTop:6 }} className="gb-pill">
-                          <span>👟</span>
-                          <span style={{ color:"#FFD700" }}>{entry.goldenBoot.name}</span>
-                          <span style={{ color:"#888" }}>{entry.goldenBoot.odds}</span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div style={{ textAlign:"center", fontSize:"1.6rem", opacity:.25 }}>🎰</div>
-                  )}
-                </div>
+            {/* Tabs */}
+            <div style={{
+              display:"flex", borderBottom:"1px solid #1a1a1a",
+              marginBottom:24, justifyContent:"center", gap:4
+            }}>
+              {[["leaderboard","📊 Leaderboard"],["draw","🎰 The Draw"],["scoring","ℹ️ Scoring"]].map(([v,l])=>(
+                <button key={v} className={`tab${activeTab===v?" active":""}`}
+                  onClick={()=>setActiveTab(v)}>{l}
+                </button>
               ))}
             </div>
 
-            <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
-              {revealed.size < draw.length ? (
-                <>
-                  <button className="btn btn-red" onClick={revealNext}>🎲 Reveal Next</button>
-                  <button className="btn btn-ghost" onClick={startAuto}>▶ Auto Reveal</button>
-                  <button className="btn btn-ghost" onClick={revealAll}>⚡ Skip to Results</button>
-                </>
-              ) : (
-                <button className="btn btn-gold" onClick={() => setStatus("results")}>
-                  🏆 See Full Results
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+            {activeTab==="leaderboard" && (
+              <Leaderboard scores={scores} gbList={gbList}/>
+            )}
+            {activeTab==="draw" && (
+              <DrawTab entries={entries} statusMap={statusMap} scores={scores}/>
+            )}
+            {activeTab==="scoring" && (
+              <ScoringGuide/>
+            )}
 
-        {/* ════════ RESULTS (post-draw, not yet locked) ════════ */}
-        {status === "results" && (
-          <div className="fade-up">
-            <div style={{ textAlign:"center", marginBottom:24 }}>
-              <h2 style={{ fontFamily:"'Bebas Neue',sans-serif", color:"#FFD700", letterSpacing:4, fontSize:"1.8rem", marginBottom:12 }}>
-                🏆 The Draw Is Done
-              </h2>
-              <input type="text" placeholder="🔍  Search player, team or Golden Boot..."
-                value={search} onChange={e => setSearch(e.target.value)}
-                style={{ width:"min(340px,100%)", marginBottom:16 }}
-              />
+            <div className="no-print" style={{ display:"flex", gap:10, justifyContent:"center", marginTop:28 }}>
+              <button className="btn btn-ghost" onClick={loadAll}>↺ Refresh</button>
+              <button className="btn btn-gold"  onClick={()=>window.print()}>🖨 Print</button>
             </div>
 
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(270px,1fr))", gap:12, marginBottom:32 }}>
-              {filtered.map((entry, i) => (
-                <div key={i} className="card slide-in" style={{ animationDelay:`${i*.03}s` }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-                    <span style={{ color:"#FFD700", fontFamily:"'Bebas Neue',sans-serif", letterSpacing:1, fontSize:"1.1rem" }}>
-                      {entry.name}
-                    </span>
-                    <span style={{ color:"#444", fontSize:".75rem" }}>
-                      {entry.teams.length} team{entry.teams.length>1?"s":""}
-                    </span>
-                  </div>
-                  <div style={{ display:"flex", flexDirection:"column", gap:5, marginBottom:8 }}>
-                    {entry.teams.map((t, ti) => (
-                      <div key={ti} style={{
-                        display:"flex", alignItems:"center", gap:10,
-                        padding:"5px 9px", borderRadius:3,
-                        background:ti===0?"rgba(255,215,0,.07)":"rgba(255,255,255,.02)",
-                        border:`1px solid ${TIER_COLOR[t.tier]}1a`
-                      }}>
-                        <span style={{ fontSize:"1.1rem" }}>{t.flag}</span>
-                        <span style={{ flex:1, color:ti===0?"#F5F0E8":"#888", fontSize:".9rem" }}>{t.name}</span>
-                        <span style={{
-                          fontSize:".68rem", padding:"2px 6px", borderRadius:3,
-                          background:TIER_COLOR[t.tier]+"22", color:TIER_COLOR[t.tier],
-                          border:`1px solid ${TIER_COLOR[t.tier]}44`
-                        }}>#{t.rank}</span>
-                      </div>
-                    ))}
-                  </div>
-                  {entry.goldenBoot && (
-                    <div className="gb-pill">
-                      <span>👟</span>
-                      <span style={{ color:"#FFD700", fontSize:".85rem" }}>{entry.goldenBoot.name}</span>
-                      <span style={{ color:"#666", fontSize:".78rem" }}>{entry.goldenBoot.team}</span>
-                      <span style={{ color:"#888", fontSize:".78rem", marginLeft:"auto" }}>{entry.goldenBoot.odds}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Lock instructions */}
-            <div className="card no-print" style={{ borderColor:"#C0392B44", marginBottom:24 }}>
-              <p style={{ color:"#FFD700", fontFamily:"'Bebas Neue',sans-serif", letterSpacing:2, fontSize:".9rem", marginBottom:12 }}>
-                🔒 LOCK THE DRAW — FRENCHIE'S STEPS
-              </p>
-              <ol style={{ color:"#aaa", fontSize:".9rem", lineHeight:2, paddingLeft:20 }}>
-                <li>Click <strong style={{ color:"#F5F0E8" }}>Copy Results for Sheet</strong> below</li>
-                <li>Open the <strong style={{ color:"#F5F0E8" }}>Draw</strong> tab in Google Sheets</li>
-                <li>Click cell <strong style={{ color:"#F5F0E8" }}>A1</strong> and paste (Ctrl+V / Cmd+V)</li>
-                <li>In cell <strong style={{ color:"#F5F0E8" }}>H1</strong> type <code style={{ color:"#FFD700" }}>LOCKED</code>, in <strong style={{ color:"#F5F0E8" }}>H2</strong> type <code style={{ color:"#FFD700" }}>TRUE</code></li>
-                <li>Everyone refreshes this page — draw is frozen ✅</li>
-              </ol>
-              <div style={{ display:"flex", gap:12, marginTop:16, flexWrap:"wrap" }}>
-                <button className="btn btn-red" onClick={copyForSheet}>
-                  {copied ? "✅ Copied!" : "📋 Copy Results for Sheet"}
-                </button>
-                <button className="btn btn-ghost" onClick={() => window.print()}>🖨 Print</button>
-                <button className="btn btn-ghost" onClick={() => { setStatus("setup"); setDraw([]); setRevealed(new Set()); }}>
-                  🔄 Re-run Draw
-                </button>
-              </div>
-            </div>
-
-            <p style={{ textAlign:"center", color:"#222", fontSize:".72rem", letterSpacing:2 }}>
-              FRENCHIE'S SWEEPSTAKE · WORLD CUP 2026 · PHASE 1
+            <p style={{ textAlign:"center", color:"#1a1a1a", fontSize:".7rem", letterSpacing:2, marginTop:28 }}>
+              FRENCHIE'S SWEEPSTAKE · WORLD CUP 2026
             </p>
           </div>
         )}
-
-        {/* ════════ LOCKED — permanent results view ════════ */}
-        {status === "locked" && (
-          <div className="fade-up">
-            <div style={{ textAlign:"center", marginBottom:24 }}>
-              <span className="locked-badge" style={{ marginBottom:16, display:"inline-block" }}>🔒 Draw Locked</span>
-              <h2 style={{ fontFamily:"'Bebas Neue',sans-serif", color:"#FFD700", letterSpacing:4, fontSize:"1.8rem", margin:"12px 0" }}>
-                Official Results
-              </h2>
-              <input type="text" placeholder="🔍  Search player, team or Golden Boot..."
-                value={search} onChange={e => setSearch(e.target.value)}
-                style={{ width:"min(340px,100%)" }}
-              />
-            </div>
-
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(270px,1fr))", gap:12, marginBottom:32 }}>
-              {lockedDraw
-                .filter(e => !search ||
-                  e.name.toLowerCase().includes(search.toLowerCase()) ||
-                  e.team1.toLowerCase().includes(search.toLowerCase()) ||
-                  e.team2.toLowerCase().includes(search.toLowerCase()) ||
-                  e.goldenBoot.toLowerCase().includes(search.toLowerCase())
-                )
-                .map((entry, i) => (
-                  <div key={i} className="card slide-in" style={{ animationDelay:`${i*.03}s` }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-                      <span style={{ color:"#FFD700", fontFamily:"'Bebas Neue',sans-serif", letterSpacing:1, fontSize:"1.1rem" }}>
-                        {entry.name}
-                      </span>
-                    </div>
-                    <div style={{ display:"flex", flexDirection:"column", gap:5, marginBottom:8 }}>
-                      {[{ name:entry.team1, rank:entry.team1Rank }, { name:entry.team2, rank:entry.team2Rank }]
-                        .filter(t => t.name)
-                        .map((t, ti) => {
-                          const found = TEAMS.find(x => x.name === t.name);
-                          const tier  = found ? found.tier : 3;
-                          return (
-                            <div key={ti} style={{
-                              display:"flex", alignItems:"center", gap:10,
-                              padding:"5px 9px", borderRadius:3,
-                              background:ti===0?"rgba(255,215,0,.07)":"rgba(255,255,255,.02)",
-                              border:`1px solid ${TIER_COLOR[tier]}1a`
-                            }}>
-                              <span style={{ fontSize:"1.1rem" }}>{found ? found.flag : "🏳️"}</span>
-                              <span style={{ flex:1, color:ti===0?"#F5F0E8":"#888", fontSize:".9rem" }}>{t.name}</span>
-                              <span style={{
-                                fontSize:".68rem", padding:"2px 6px", borderRadius:3,
-                                background:TIER_COLOR[tier]+"22", color:TIER_COLOR[tier],
-                                border:`1px solid ${TIER_COLOR[tier]}44`
-                              }}>#{t.rank}</span>
-                            </div>
-                          );
-                        })}
-                    </div>
-                    {entry.goldenBoot && (
-                      <div className="gb-pill">
-                        <span>👟</span>
-                        <span style={{ color:"#FFD700", fontSize:".85rem" }}>{entry.goldenBoot}</span>
-                      </div>
-                    )}
-                  </div>
-              ))}
-            </div>
-
-            <div style={{ textAlign:"center" }}>
-              <button className="btn btn-ghost no-print" onClick={() => window.print()}>🖨 Print Results</button>
-            </div>
-            <p style={{ textAlign:"center", color:"#222", fontSize:".72rem", letterSpacing:2, marginTop:24 }}>
-              FRENCHIE'S SWEEPSTAKE · WORLD CUP 2026 · LOCKED
-            </p>
-          </div>
-        )}
-
       </div>
     </div>
   );
 }
 
-// Mount
 ReactDOM.createRoot(document.getElementById("root")).render(
   React.createElement(Sweepstake)
 );
