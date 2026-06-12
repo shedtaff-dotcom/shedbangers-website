@@ -165,11 +165,13 @@ function parseGBTab(text) {
 
 function parseResultsTab(text) {
   // HomeTeam, HomeGoals, AwayTeam, AwayGoals
+  // HomeTeam, HomeGoals, AwayGoals, AwayTeam <-- update to the sheet
+  
   return parseSheet(text).map(r => ({
     home:      r[0]||"",
     homeGoals: r[1]===""||r[1]===undefined ? null : parseInt(r[1],10),
-    away:      r[2]||"",
-    awayGoals: r[3]===""||r[3]===undefined ? null : parseInt(r[3],10),
+    away:      r[3]||"",
+    awayGoals: r[2]===""||r[2]===undefined ? null : parseInt(r[2],10),
   })).filter(r => r.home && r.away &&
                   r.homeGoals !== null && r.awayGoals !== null &&
                   !isNaN(r.homeGoals) && !isNaN(r.awayGoals));
@@ -892,7 +894,7 @@ function Sweepstake() {
               <span>⚽ {matchCount} matches played</span>
               <span>·</span>
               <span style={{ color:activeCount>0?"#90CDF4":"#555" }}>
-                🟢 {activeCount} still active
+                🟢 {activeCount} players active
               </span>
               <span>·</span>
               <span>💰 £{PRIZES.winner+PRIZES.goldenBoot+PRIZES.pointsTable} pot</span>
