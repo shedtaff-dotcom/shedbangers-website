@@ -46,7 +46,7 @@ const TEAMS = [
   { rank:13, name:"Colombia",       flag:"🇨🇴", tier:1 },
   { rank:14, name:"Senegal",        flag:"🇸🇳", tier:2 },
   { rank:15, name:"Mexico",         flag:"🇲🇽", tier:2 },
-    { rank:16, name:"United States",  flag:"🇺🇸", tier:2 },
+  { rank:16, name:"United States",  flag:"🇺🇸", tier:2 },
   { rank:17, name:"Uruguay",        flag:"🇺🇾", tier:2 },
   { rank:18, name:"Japan",          flag:"🇯🇵", tier:2 },
   { rank:19, name:"Switzerland",    flag:"🇨🇭", tier:2 },
@@ -62,7 +62,7 @@ const TEAMS = [
   { rank:36, name:"Algeria",        flag:"🇩🇿", tier:3 },
   { rank:39, name:"Sweden",         flag:"🇸🇪", tier:3 },
   { rank:40, name:"Tunisia",        flag:"🇹🇳", tier:3 },
-  { rank:41, name:"Czechia",        flag:"🇨🇿", tier:3 },
+  { rank:41, name:"Czech Republic",        flag:"🇨🇿", tier:3 },
   { rank:42, name:"Turkiye",        flag:"🇹🇷", tier:3 },
   { rank:44, name:"Norway",         flag:"🇳🇴", tier:3 },
   { rank:47, name:"Scotland",       flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", tier:3 },
@@ -956,7 +956,7 @@ function Sweepstake() {
               </span>
               <span>·</span>
               <span style={{ color:activeCount>0?"#90CDF4":"#555" }}>
-                🟢 {activeCount} player still in the sweep
+                🟢 {activeCount} still active
               </span>
               <span>·</span>
               <span>💰 £{PRIZES.winner+PRIZES.goldenBoot+PRIZES.pointsTable} pot</span>
