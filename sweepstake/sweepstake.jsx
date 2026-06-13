@@ -46,7 +46,7 @@ const TEAMS = [
   { rank:13, name:"Colombia",       flag:"🇨🇴", tier:1 },
   { rank:14, name:"Senegal",        flag:"🇸🇳", tier:2 },
   { rank:15, name:"Mexico",         flag:"🇲🇽", tier:2 },
-  { rank:16, name:"United States",  flag:"🇺🇸", tier:2 },
+    { rank:16, name:"United States",  flag:"🇺🇸", tier:2 },
   { rank:17, name:"Uruguay",        flag:"🇺🇾", tier:2 },
   { rank:18, name:"Japan",          flag:"🇯🇵", tier:2 },
   { rank:19, name:"Switzerland",    flag:"🇨🇭", tier:2 },
@@ -164,17 +164,24 @@ function parseGBTab(text) {
 }
 
 function parseResultsTab(text) {
-  // HomeTeam, HomeGoals, AwayTeam, AwayGoals
-  // HomeTeam, HomeGoals, AwayGoals, AwayTeam <-- update to the sheet
-  
+  // Columns: HomeTeam | HomeGoals | AwayGoals | AwayTeam
+  // (Wikipedia pull has AwayGoals before AwayTeam)
+  const toGoals = s => {
+    if (s === null || s === undefined) return null;
+    const clean = String(s).trim().replace(/[^\d]/g, "");
+    if (clean === "") return null;
+    const n = parseInt(clean, 10);
+    return isNaN(n) ? null : n;
+  };
   return parseSheet(text).map(r => ({
-    home:      r[0]||"",
-    homeGoals: r[1]===""||r[1]===undefined ? null : parseInt(r[1],10),
-    away:      r[3]||"",
-    awayGoals: r[2]===""||r[2]===undefined ? null : parseInt(r[2],10),
-  })).filter(r => r.home && r.away &&
-                  r.homeGoals !== null && r.awayGoals !== null &&
-                  !isNaN(r.homeGoals) && !isNaN(r.awayGoals));
+    home:      (r[0]||"").trim(),
+    homeGoals: toGoals(r[1]),
+    awayGoals: toGoals(r[2]),
+    away:      (r[3]||"").trim(),
+  })).filter(r =>
+    r.home && r.away &&
+    r.homeGoals !== null && r.awayGoals !== null
+  );
 }
 
 // ─── SCORE CALCULATION ────────────────────────────────────────────────────────
@@ -261,6 +268,22 @@ function calcPoints(entries, statusMap, results, gbList) {
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 const TIER_COLOR = { 1:"#FFD700", 2:"#C0C0C0", 3:"#CD7F32" };
 
+// Build a map of teamName -> { w, d, l, gf, ga } from results
+function buildTeamRecords(results) {
+  const rec = {};
+  const init = () => ({ w:0, d:0, l:0, gf:0, ga:0 });
+  results.forEach(r => {
+    if (!rec[r.home]) rec[r.home] = init();
+    if (!rec[r.away]) rec[r.away] = init();
+    rec[r.home].gf += r.homeGoals; rec[r.home].ga += r.awayGoals;
+    rec[r.away].gf += r.awayGoals; rec[r.away].ga += r.homeGoals;
+    if (r.homeGoals > r.awayGoals) { rec[r.home].w++; rec[r.away].l++; }
+    else if (r.homeGoals < r.awayGoals) { rec[r.away].w++; rec[r.home].l++; }
+    else { rec[r.home].d++; rec[r.away].d++; }
+  });
+  return rec;
+}
+
 function teamsForEntry(entry) {
   return [
     { name:entry.team1, rank:entry.rank1 },
@@ -332,11 +355,12 @@ const CSS = `
 `;
 
 // ─── TEAM ROW ─────────────────────────────────────────────────────────────────
-function TeamRow({ name, rank, statusMap, primary }) {
+function TeamRow({ name, rank, statusMap, primary, teamRecords }) {
   const info   = teamInfo(name);
   const status = statusMap[name] || "IN";
   const sl     = STAGE_LABEL[status] || STAGE_LABEL.IN;
   const out    = isEliminated(status);
+  const rec    = teamRecords ? teamRecords[name] : null;
 
   return (
     <div style={{
@@ -355,6 +379,14 @@ function TeamRow({ name, rank, statusMap, primary }) {
         color: out ? "#444" : primary ? "#F5F0E8" : "#999",
         textDecoration: out ? "line-through" : "none",
       }}>{name}</span>
+      {rec && (rec.w + rec.d + rec.l > 0) && (
+        <span style={{ fontSize:".68rem", color:"#555", whiteSpace:"nowrap", letterSpacing:.5 }}>
+          <span style={{ color: rec.w>0?"#4ade80":"#555" }}>{rec.w}W</span>
+          {" "}<span style={{ color: rec.d>0?"#facc15":"#555" }}>{rec.d}D</span>
+          {" "}<span style={{ color: rec.l>0?"#f87171":"#555" }}>{rec.l}L</span>
+          {" "}<span style={{ color:"#444" }}>{rec.gf}-{rec.ga}</span>
+        </span>
+      )}
       {sl.label && (
         <span style={{ fontSize:".68rem", color:sl.color, whiteSpace:"nowrap" }}>{sl.label}</span>
       )}
@@ -490,7 +522,7 @@ function Leaderboard({ scores, gbList }) {
 }
 
 // ─── DRAW TAB ─────────────────────────────────────────────────────────────────
-function DrawTab({ entries, statusMap, scores }) {
+function DrawTab({ entries, statusMap, scores, teamRecords, scoresLoading }) {
   const [search, setSearch]   = useState("");
   const [filter, setFilter]   = useState("all");
 
@@ -512,6 +544,18 @@ function DrawTab({ entries, statusMap, scores }) {
 
   return (
     <div className="fade-up">
+      {scoresLoading && (
+        <div style={{ textAlign:"center", marginBottom:16 }}>
+          <span style={{
+            display:"inline-flex", alignItems:"center", gap:8,
+            background:"rgba(255,215,0,.06)", border:"1px solid rgba(255,215,0,.15)",
+            borderRadius:3, padding:"6px 14px", fontSize:".8rem", color:"#888"
+          }}>
+            <span style={{ width:10, height:10, border:"2px solid #333", borderTopColor:"#FFD700", borderRadius:"50%", display:"inline-block", animation:"spin .8s linear infinite" }}/>
+            Loading scores…
+          </span>
+        </div>
+      )}
       <div style={{ display:"flex", gap:10, flexWrap:"wrap", justifyContent:"center", marginBottom:20 }}>
         <input type="text"
           placeholder="🔍  Search player, team or Golden Boot..."
@@ -559,7 +603,7 @@ function DrawTab({ entries, statusMap, scores }) {
               <div style={{ display:"flex", flexDirection:"column", gap:5, marginBottom:8 }}>
                 {teams.map((t,ti)=>(
                   <TeamRow key={ti} name={t.name} rank={t.rank}
-                    statusMap={statusMap} primary={ti===0}/>
+                    statusMap={statusMap} primary={ti===0} teamRecords={teamRecords}/>
                 ))}
               </div>
 
@@ -769,7 +813,8 @@ function Sweepstake() {
   const [gbList,    setGbList]    = useState([]);
   const [results,   setResults]   = useState([]);
   const [scores,    setScores]    = useState([]);
-  const [activeTab, setActiveTab] = useState("leaderboard");
+  const [activeTab,     setActiveTab]     = useState("leaderboard");
+  const [scoresLoading, setScoresLoading] = useState(true);
 
   useEffect(()=>{
     const s = document.createElement("style");
@@ -798,27 +843,41 @@ function Sweepstake() {
     return text;
   }
 
+  const delay = ms => new Promise(res => setTimeout(res, ms));
+
+  async function safeTab(name, parser, fallback) {
+        try {
+        const text = await fetchTab(name);
+          return parser(text);
+        } catch(e) {
+          console.warn(`Tab "${name}" failed:`, e.message);
+          return fallback;
+        }
+  }
+
   async function loadAll() {
     setStatus("loading");
     try {
+      // Step 1: Load FinalDraw first — required, show draw ASAP
       const drawText = await fetchTab("FinalDraw");
       const parsed   = parseFinalDraw(drawText);
       if (!parsed.length) throw new Error("No data in FinalDraw tab — check sheet is published to web");
-
-      let stMap = {};
-      let gb    = [];
-      let res   = [];
-
-      try { stMap = parseStatusTab(await fetchTab("Status")); }    catch(_){}
-      try { gb    = parseGBTab(await fetchTab("GB")); }             catch(_){}
-      try { res   = parseResultsTab(await fetchTab("Results")); }   catch(_){}
-
       setEntries(parsed);
+      setStatus("ready"); // Show draw immediately, scores update below
+
+      // Step 2: Load remaining tabs sequentially with small gaps
+      // to avoid Google rate-limiting multiple simultaneous requests
+      const stMap = await safeTab("Status", parseStatusTab, {});
+      await delay(300);
+      const gb  = await safeTab("GB",      parseGBTab,     []);
+      await delay(300);
+      const res = await safeTab("Results", parseResultsTab,[]);
+
       setStatusMap(stMap);
       setGbList(gb);
       setResults(res);
       setScores(calcPoints(parsed, stMap, res, gb));
-      setStatus("ready");
+      setScoresLoading(false);
     } catch(e) {
       setLoadError(e.message || "Couldn't load data. Check the sheet is published to web.");
       setStatus("error");
@@ -891,10 +950,13 @@ function Sweepstake() {
             <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap", marginBottom:20, fontSize:".8rem", color:"#555" }}>
               <span>👥 {entries.length} players</span>
               <span>·</span>
-              <span>⚽ {matchCount} matches played</span>
+              <span>
+                ⚽ {matchCount} matches played
+                {scoresLoading && <span style={{ color:"#FFD700", fontSize:".72rem", marginLeft:6 }}>⟳ updating…</span>}
+              </span>
               <span>·</span>
               <span style={{ color:activeCount>0?"#90CDF4":"#555" }}>
-                🟢 {activeCount} players active
+                🟢 {activeCount} player still in the sweep
               </span>
               <span>·</span>
               <span>💰 £{PRIZES.winner+PRIZES.goldenBoot+PRIZES.pointsTable} pot</span>
@@ -916,7 +978,8 @@ function Sweepstake() {
               <Leaderboard scores={scores} gbList={gbList}/>
             )}
             {activeTab==="draw" && (
-              <DrawTab entries={entries} statusMap={statusMap} scores={scores}/>
+              <DrawTab entries={entries} statusMap={statusMap} scores={scores}
+                teamRecords={buildTeamRecords(results)} scoresLoading={scoresLoading}/>
             )}
             {activeTab==="scoring" && (
               <ScoringGuide/>
