@@ -952,7 +952,7 @@ function Sweepstake() {
               <span>·</span>
               <span>
                 ⚽ {matchCount} matches played
-                {scoresLoading && <span style={{ color:"#FFD700", fontSize:".72rem", marginLeft:6 }}>⟳ updating…</span>}
+                {scoresLoading && <span style={{ color:"#FFD700", fontSize:".72rem", marginLeft:6 }}>⟳ updating scores…</span>}
               </span>
               <span>·</span>
               <span style={{ color:activeCount>0?"#90CDF4":"#555" }}>
