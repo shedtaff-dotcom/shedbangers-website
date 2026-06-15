@@ -6,6 +6,19 @@ def write_csv(path, header, rows):
         writer.writerow(header)
         writer.writerows(rows)
 
+# Translate API names to match the sweepstake sheet names
+API_NAME_MAP = {
+    "Bosnia-Herzegovina": "Bosnia & Herz.",
+    "Cape Verde Islands":  "Cape Verde",
+    "Congo DR":            "DR Congo",
+    "Korea Republic":      "South Korea",
+    "Turkey":              "Turkiye",
+    "United States":       "USA",
+}
+
+def norm(name):
+    return API_NAME_MAP.get(name, name)
+
 # ── Results ───────────────────────────────────────────────────────────────────
 with open('/tmp/matches.json') as f:
     data = json.load(f)
@@ -14,8 +27,8 @@ rows = []
 for match in data.get('matches', []):
     if match.get('status') != 'FINISHED':
         continue
-    home       = match.get('homeTeam', {}).get('name', '')
-    away       = match.get('awayTeam', {}).get('name', '')
+    home       = norm(match.get('homeTeam', {}).get('name', ''))
+    away       = norm(match.get('awayTeam', {}).get('name', ''))
     score      = match.get('score', {}).get('fullTime', {})
     home_goals = score.get('home')
     away_goals = score.get('away')
@@ -34,7 +47,7 @@ with open('/tmp/scorers.json') as f:
 scorers = []
 for entry in data.get('scorers', []):
     name  = entry.get('player', {}).get('name', '')
-    team  = entry.get('team',   {}).get('name', '')
+    team  = norm(entry.get('team',   {}).get('name', ''))
     goals = entry.get('goals', 0) or 0
     if name:
         scorers.append([name, goals, team])
