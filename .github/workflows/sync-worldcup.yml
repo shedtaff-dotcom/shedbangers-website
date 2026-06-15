@@ -89,6 +89,27 @@ jobs:
               writer.writerows(scorers)
 
           print(f"Scorers: {len(scorers)} players written")
+
+          # ── Teams ─────────────────────────────────────────────────────────────
+          with open('/tmp/teams.json') as f:
+              data = json.load(f)
+
+          teams = []
+          for t in data.get('teams', []):
+              name      = t.get('name', '')
+              short     = t.get('shortName', '')
+              tla       = t.get('tla', '')
+              if name:
+                  teams.append([name, short, tla])
+
+          teams.sort(key=lambda r: r[0])
+
+          with open('sweepstake/data/teams.csv', 'w', newline='', encoding='utf-8') as f:
+              writer = csv.writer(f)
+              writer.writerow(['Name', 'ShortName', 'TLA'])
+              writer.writerows(teams)
+
+          print(f"Teams: {len(teams)} teams written")
           PYEOF
 
       - name: Commit if data changed
@@ -96,14 +117,15 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add sweepstake/data/results.csv sweepstake/data/topscorers.csv
+          git add sweepstake/data/results.csv sweepstake/data/topscorers.csv sweepstake/data/teams.csv
 
           if git diff --staged --quiet; then
             echo "No changes — data unchanged since last run"
           else
             MATCHES=$(tail -n +2 sweepstake/data/results.csv | wc -l | tr -d ' ')
             SCORERS=$(tail -n +2 sweepstake/data/topscorers.csv | wc -l | tr -d ' ')
-            git commit -m "⚽ WC2026: ${MATCHES} results, ${SCORERS} scorers [skip ci]"
+            TEAMS=$(tail -n +2 sweepstake/data/teams.csv | wc -l | tr -d ' ')
+            git commit -m "⚽ WC2026: ${MATCHES} results, ${SCORERS} scorers, ${TEAMS} teams [skip ci]"
             git push
             echo "Pushed updated data"
           fi
