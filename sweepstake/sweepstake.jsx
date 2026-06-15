@@ -46,7 +46,7 @@ const TEAMS = [
   { rank:13, name:"Colombia",       flag:"🇨🇴", tier:1 },
   { rank:14, name:"Senegal",        flag:"🇸🇳", tier:2 },
   { rank:15, name:"Mexico",         flag:"🇲🇽", tier:2 },
-  { rank:16, name:"United States",  flag:"🇺🇸", tier:2 },
+  { rank:16, name:"USA",            flag:"🇺🇸", tier:2 },
   { rank:17, name:"Uruguay",        flag:"🇺🇾", tier:2 },
   { rank:18, name:"Japan",          flag:"🇯🇵", tier:2 },
   { rank:19, name:"Switzerland",    flag:"🇨🇭", tier:2 },
@@ -62,12 +62,12 @@ const TEAMS = [
   { rank:36, name:"Algeria",        flag:"🇩🇿", tier:3 },
   { rank:39, name:"Sweden",         flag:"🇸🇪", tier:3 },
   { rank:40, name:"Tunisia",        flag:"🇹🇳", tier:3 },
-  { rank:41, name:"Czech Republic",        flag:"🇨🇿", tier:3 },
+  { rank:41, name:"Czechia",        flag:"🇨🇿", tier:3 },
   { rank:42, name:"Turkiye",        flag:"🇹🇷", tier:3 },
   { rank:44, name:"Norway",         flag:"🇳🇴", tier:3 },
   { rank:47, name:"Scotland",       flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", tier:3 },
   { rank:51, name:"DR Congo",       flag:"🇨🇩", tier:3 },
-  { rank:52, name:"Bosnia and Herzegovina", flag:"🇧🇦", tier:3 },
+  { rank:52, name:"Bosnia & Herz.", flag:"🇧🇦", tier:3 },
   { rank:53, name:"Panama",         flag:"🇵🇦", tier:3 },
   { rank:57, name:"Saudi Arabia",   flag:"🇸🇦", tier:3 },
   { rank:60, name:"South Africa",   flag:"🇿🇦", tier:3 },
@@ -82,8 +82,25 @@ const TEAMS = [
   { rank:95, name:"New Zealand",    flag:"🇳🇿", tier:3 },
 ];
 
+// API name -> sheet/JSX name normalisation
+// Keeps the sheet stable while handling API naming quirks
+const API_NAME_MAP = {
+  "Bosnia-Herzegovina":  "Bosnia & Herz.",
+  "Cape Verde Islands":  "Cape Verde",
+  "Congo DR":            "DR Congo",
+  "Korea Republic":      "South Korea",
+  "Turkey":              "Turkiye",
+  "United States":       "USA",
+};
+
+function normaliseTeamName(name) {
+  if (!name) return "";
+  return API_NAME_MAP[name] || name;
+}
+
 function teamInfo(name) {
-  return TEAMS.find(t => t.name.toLowerCase() === (name||"").toLowerCase()) ||
+  const n = normaliseTeamName(name);
+  return TEAMS.find(t => t.name.toLowerCase() === n.toLowerCase()) ||
          { flag:"🏳️", tier:3, rank:"?" };
 }
 
@@ -95,8 +112,8 @@ const STAGE_LABEL  = {
   THIRD:       { label:"🥉 3rd",         color:"#CD7F32" },
   SF:          { label:"⚽ Semi Final",  color:"#90CDF4" },
   QF:          { label:"⚽ Quarter Final",color:"#63B3ED"},
-  R16:         { label:"R16",            color:"#888"    },
-  OUT:         { label:"❌ Out",          color:"#555"    },
+  R16:         { label:"R16",            color:"#bbb"    },
+  OUT:         { label:"❌ Out",          color:"#888"    },
   IN:          { label:"",               color:""        },
 };
 
@@ -183,10 +200,10 @@ function parseResultsTab(text) {
     return isNaN(n) ? null : n;
   };
   return parseSheet(text).map(r => ({
-    home:      (r[0]||"").trim(),
+    home:      normaliseTeamName((r[0]||"").trim()),
     homeGoals: toGoals(r[1]),
     awayGoals: toGoals(r[2]),
-    away:      (r[3]||"").trim(),
+    away:      normaliseTeamName((r[3]||"").trim()),
   })).filter(r =>
     r.home && r.away &&
     r.homeGoals !== null && r.awayGoals !== null
@@ -303,13 +320,15 @@ function buildTeamRecords(results) {
   const rec = {};
   const init = () => ({ w:0, d:0, l:0, gf:0, ga:0 });
   results.forEach(r => {
-    if (!rec[r.home]) rec[r.home] = init();
-    if (!rec[r.away]) rec[r.away] = init();
-    rec[r.home].gf += r.homeGoals; rec[r.home].ga += r.awayGoals;
-    rec[r.away].gf += r.awayGoals; rec[r.away].ga += r.homeGoals;
-    if (r.homeGoals > r.awayGoals) { rec[r.home].w++; rec[r.away].l++; }
-    else if (r.homeGoals < r.awayGoals) { rec[r.away].w++; rec[r.home].l++; }
-    else { rec[r.home].d++; rec[r.away].d++; }
+    const home = normaliseTeamName(r.home);
+    const away = normaliseTeamName(r.away);
+    if (!rec[home]) rec[home] = init();
+    if (!rec[away]) rec[away] = init();
+    rec[home].gf += r.homeGoals; rec[home].ga += r.awayGoals;
+    rec[away].gf += r.awayGoals; rec[away].ga += r.homeGoals;
+    if (r.homeGoals > r.awayGoals) { rec[home].w++; rec[away].l++; }
+    else if (r.homeGoals < r.awayGoals) { rec[away].w++; rec[home].l++; }
+    else { rec[home].d++; rec[away].d++; }
   });
   return rec;
 }
@@ -345,7 +364,7 @@ const CSS = `
   .btn-red:hover  {box-shadow:0 4px 20px #C0392B99}
   .btn-gold  {background:linear-gradient(135deg,#b8860b,#FFD700);color:#111}
   .btn-gold:hover {box-shadow:0 4px 20px #FFD70099}
-  .btn-ghost {background:transparent;color:#F5F0E8;border:1px solid #333}
+  .btn-ghost {background:transparent;color:#F5F0E8;border:1px solid #555}
   .btn-ghost:hover{border-color:#FFD700;color:#FFD700}
   .card {
     background:rgba(255,255,255,.04); border:1px solid rgba(255,215,0,.15);
@@ -357,12 +376,12 @@ const CSS = `
   .tab {
     font-family:'Bebas Neue',sans-serif; letter-spacing:2px; font-size:.9rem;
     padding:10px 20px; border:none; border-bottom:2px solid transparent;
-    background:transparent; color:#666; cursor:pointer; transition:all .2s;
+    background:transparent; color:#999; cursor:pointer; transition:all .2s;
   }
   .tab.active {color:#FFD700;border-bottom-color:#FFD700}
   .tab:hover  {color:#F5F0E8}
   input[type=text] {
-    background:rgba(0,0,0,.5); border:1px solid #333; border-radius:3px;
+    background:rgba(0,0,0,.5); border:1px solid #555; border-radius:3px;
     color:#F5F0E8; font-family:'Barlow',sans-serif; font-size:1rem;
     padding:10px 14px; outline:none; transition:border-color .2s;
   }
@@ -410,18 +429,18 @@ function TeamRow({ name, rank, statusMap, primary, teamRecords }) {
         textDecoration: out ? "line-through" : "none",
       }}>{name}</span>
       {rec && (rec.w + rec.d + rec.l > 0) && (
-        <span style={{ fontSize:".68rem", color:"#555", whiteSpace:"nowrap", letterSpacing:.5 }}>
+        <span style={{ fontSize:".85rem", color:"#888", whiteSpace:"nowrap", letterSpacing:.5 }}>
           <span style={{ color: rec.w>0?"#4ade80":"#555" }}>{rec.w}W</span>
           {" "}<span style={{ color: rec.d>0?"#facc15":"#555" }}>{rec.d}D</span>
           {" "}<span style={{ color: rec.l>0?"#f87171":"#555" }}>{rec.l}L</span>
-          {" "}<span style={{ color:"#444" }}>{rec.gf}-{rec.ga}</span>
+          {" "}<span style={{ color:"#777" }}>{rec.gf}-{rec.ga}</span>
         </span>
       )}
       {sl.label && (
-        <span style={{ fontSize:".68rem", color:sl.color, whiteSpace:"nowrap" }}>{sl.label}</span>
+        <span style={{ fontSize:".85rem", color:sl.color, whiteSpace:"nowrap" }}>{sl.label}</span>
       )}
       <span style={{
-        fontSize:".65rem", padding:"2px 5px", borderRadius:3,
+        fontSize:".82rem", padding:"2px 5px", borderRadius:3,
         background:TIER_COLOR[info.tier]+"22", color:TIER_COLOR[info.tier],
         border:`1px solid ${TIER_COLOR[info.tier]}44`,
       }}>#{rank||info.rank}</span>
@@ -457,7 +476,7 @@ function Leaderboard({ scores, gbList }) {
                   cursor:"pointer", transition:"background .2s",
                 }}
               >
-                <span style={{ fontFamily:"'Bebas Neue',sans-serif", color:"#555", fontSize:".85rem", width:20, textAlign:"right" }}>
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", color:"#888", fontSize:".85rem", width:20, textAlign:"right" }}>
                   {i+1}
                 </span>
                 <span style={{ fontSize:"1rem" }}>{medal}</span>
@@ -465,21 +484,21 @@ function Leaderboard({ scores, gbList }) {
                   {s.name}
                 </span>
                 {/* breakdown toggle */}
-                <span style={{ color:"#444", fontSize:".75rem" }}>{isOpen?"▲":"▼"}</span>
+                <span style={{ color:"#777", fontSize:".82rem" }}>{isOpen?"▲":"▼"}</span>
                 {/* pts bar */}
-                <div style={{ width:80, height:6, background:"#1a1a1a", borderRadius:3, flexShrink:0 }}>
+                <div style={{ width:80, height:6, background:"#2a2a2a", borderRadius:3, flexShrink:0 }}>
                   <div className="pts-bar-fill" style={{ width:`${maxPts?Math.round((s.total/maxPts)*100):0}%` }}/>
                 </div>
                 <span style={{
                   fontFamily:"'Bebas Neue',sans-serif", letterSpacing:1,
                   color: i===0?"#FFD700":"#F5F0E8", fontSize:"1.1rem", width:52, textAlign:"right"
-                }}>{s.total} <span style={{ color:"#555", fontSize:".7rem" }}>pts</span></span>
+                }}>{s.total} <span style={{ color:"#888", fontSize:".8rem" }}>pts</span></span>
               </div>
 
               {/* Breakdown */}
               {isOpen && (
                 <div style={{
-                  background:"rgba(0,0,0,.3)", border:"1px solid #1a1a1a",
+                  background:"rgba(255,255,255,.04)", border:"1px solid #444",
                   borderTop:"none", borderRadius:"0 0 4px 4px",
                   padding:"12px 14px",
                 }}>
@@ -490,7 +509,7 @@ function Leaderboard({ scores, gbList }) {
                       { label:"Golden Boot",    val:s.gbPts },
                     ].map((b,bi) => (
                       <div key={bi} style={{ textAlign:"center" }}>
-                        <div style={{ color:"#555", fontSize:".72rem", marginBottom:2 }}>{b.label}</div>
+                        <div style={{ color:"#888", fontSize:".82rem", marginBottom:2 }}>{b.label}</div>
                         <div style={{ color:"#F5F0E8", fontFamily:"'Bebas Neue',sans-serif", fontSize:"1.2rem" }}>{b.val}</div>
                       </div>
                     ))}
@@ -498,7 +517,7 @@ function Leaderboard({ scores, gbList }) {
                   {s.breakdown.length > 0 && (
                     <div style={{ borderTop:"1px solid #1a1a1a", paddingTop:8 }}>
                       {s.breakdown.map((b,bi) => (
-                        <div key={bi} style={{ color:"#555", fontSize:".78rem", lineHeight:1.8 }}>· {b}</div>
+                        <div key={bi} style={{ color:"#888", fontSize:".85rem", lineHeight:1.8 }}>· {b}</div>
                       ))}
                     </div>
                   )}
@@ -515,7 +534,7 @@ function Leaderboard({ scores, gbList }) {
           👟 GOLDEN BOOT RACE
         </p>
         {gbList.length === 0 && (
-          <p style={{ color:"#444", fontSize:".88rem" }}>No goals recorded yet.</p>
+          <p style={{ color:"#777", fontSize:".88rem" }}>No goals recorded yet.</p>
         )}
         {gbList
           .slice()
@@ -530,18 +549,18 @@ function Leaderboard({ scores, gbList }) {
                 background: isTop ? "rgba(255,215,0,.07)" : "rgba(255,255,255,.02)",
                 border:`1px solid ${isTop?"rgba(255,215,0,.2)":"#1a1a1a"}`,
               }}>
-                <span style={{ color:"#555", fontSize:".82rem", width:18, textAlign:"right" }}>{i+1}</span>
+                <span style={{ color:"#888", fontSize:".82rem", width:18, textAlign:"right" }}>{i+1}</span>
                 <span style={{ flex:1, color: isTop?"#FFD700":"#aaa", fontSize:".92rem" }}>{g.name}</span>
-                <div style={{ width:80, height:5, background:"#1a1a1a", borderRadius:3, flexShrink:0 }}>
+                <div style={{ width:80, height:5, background:"#2a2a2a", borderRadius:3, flexShrink:0 }}>
                   <div className="pts-bar-fill" style={{ width:`${pct}%` }}/>
                 </div>
                 <span style={{
                   fontFamily:"'Bebas Neue',sans-serif", color: isTop?"#FFD700":"#F5F0E8",
                   fontSize:"1rem", width:40, textAlign:"right"
                 }}>
-                  {g.goals} <span style={{ color:"#555", fontSize:".7rem" }}>⚽</span>
+                  {g.goals} <span style={{ color:"#888", fontSize:".8rem" }}>⚽</span>
                 </span>
-                {isTop && <span style={{ fontSize:".75rem", color:"#FFD700" }}>👟</span>}
+                {isTop && <span style={{ fontSize:".82rem", color:"#FFD700" }}>👟</span>}
               </div>
             );
           })
@@ -579,7 +598,7 @@ function DrawTab({ entries, statusMap, scores, teamRecords, scoresLoading }) {
           <span style={{
             display:"inline-flex", alignItems:"center", gap:8,
             background:"rgba(255,215,0,.06)", border:"1px solid rgba(255,215,0,.15)",
-            borderRadius:3, padding:"6px 14px", fontSize:".8rem", color:"#888"
+            borderRadius:3, padding:"6px 14px", fontSize:".8rem", color:"#bbb"
           }}>
             <span style={{ width:10, height:10, border:"2px solid #333", borderTopColor:"#FFD700", borderRadius:"50%", display:"inline-block", animation:"spin .8s linear infinite" }}/>
             Loading scores…
@@ -596,7 +615,7 @@ function DrawTab({ entries, statusMap, scores, teamRecords, scoresLoading }) {
           {[["all","All"],["active","Still In"],["eliminated","Eliminated"]].map(([v,l])=>(
             <button key={v} className="btn btn-ghost"
               style={{
-                padding:"8px 14px", fontSize:".78rem",
+                padding:"8px 14px", fontSize:".85rem",
                 borderColor:filter===v?"#FFD700":"#333",
                 color:filter===v?"#FFD700":"#555",
               }}
@@ -625,7 +644,7 @@ function DrawTab({ entries, statusMap, scores, teamRecords, scoresLoading }) {
                   <span style={{
                     fontFamily:"'Bebas Neue',sans-serif", fontSize:".9rem",
                     color:"#F5F0E8", background:"rgba(255,255,255,.06)",
-                    border:"1px solid #333", borderRadius:3, padding:"2px 8px"
+                    border:"1px solid #555", borderRadius:3, padding:"2px 8px"
                   }}>{sc.total} pts</span>
                 )}
               </div>
@@ -644,7 +663,7 @@ function DrawTab({ entries, statusMap, scores, teamRecords, scoresLoading }) {
                   textDecoration:gbOut?"line-through":"none"
                 }}>{entry.gbPlayer}</span>
                 {sc && sc.gbGoals > 0 && (
-                  <span style={{ color:"#888", fontSize:".78rem" }}>
+                  <span style={{ color:"#bbb", fontSize:".85rem" }}>
                     {sc.gbGoals}⚽ = {sc.gbPts}pts
                   </span>
                 )}
@@ -653,7 +672,7 @@ function DrawTab({ entries, statusMap, scores, teamRecords, scoresLoading }) {
           );
         })}
         {!filtered.length && (
-          <p style={{ color:"#444", gridColumn:"1/-1", textAlign:"center", padding:40 }}>
+          <p style={{ color:"#777", gridColumn:"1/-1", textAlign:"center", padding:40 }}>
             No results for "{search}"
           </p>
         )}
@@ -693,9 +712,9 @@ function PrizesPanel({ entries, statusMap, scores, gbList }) {
         {prizes.map((p,i)=>(
           <div key={i} style={{
             padding:"14px", borderRadius:4,
-            background:"rgba(255,255,255,.03)", border:"1px solid #222"
+            background:"rgba(255,255,255,.03)", border:"1px solid #444"
           }}>
-            <div style={{ color:"#888", fontSize:".78rem", marginBottom:4 }}>{p.label}</div>
+            <div style={{ color:"#bbb", fontSize:".85rem", marginBottom:4 }}>{p.label}</div>
             <div style={{
               color:"#FFD700", fontFamily:"'Bebas Neue',sans-serif",
               fontSize:"1.6rem", letterSpacing:1, lineHeight:1
@@ -703,7 +722,7 @@ function PrizesPanel({ entries, statusMap, scores, gbList }) {
             <div style={{ color:p.winner?"#F5F0E8":"#333", fontSize:".88rem", marginTop:6 }}>
               {p.winner || "TBC"}
             </div>
-            <div style={{ color:"#444", fontSize:".72rem", marginTop:4 }}>{p.note}</div>
+            <div style={{ color:"#777", fontSize:".82rem", marginTop:4 }}>{p.note}</div>
           </div>
         ))}
       </div>
@@ -719,14 +738,14 @@ function AdminPanel() {
       <p style={{ fontFamily:"'Bebas Neue',sans-serif", letterSpacing:2, color:"#90CDF4", fontSize:".85rem", marginBottom:10 }}>
         🔧 ADMIN — FRENCHIE ONLY
       </p>
-      <div style={{ color:"#888", fontSize:".85rem", lineHeight:2 }}>
+      <div style={{ color:"#bbb", fontSize:".85rem", lineHeight:2 }}>
         <strong style={{ color:"#F5F0E8" }}>Status tab</strong> — Team | Status &nbsp;
-        <span style={{ color:"#555" }}>Values: IN · OUT · R16 · QF · SF · THIRD · RUNNER UP · WINNER</span><br/>
+        <span style={{ color:"#888" }}>Values: IN · OUT · R16 · QF · SF · THIRD · RUNNER UP · WINNER</span><br/>
         <strong style={{ color:"#F5F0E8" }}>GB tab</strong> — Name | Goals &nbsp;
-        <span style={{ color:"#555" }}>Update goals after each match. Top scorer wins £{PRIZES.goldenBoot}.</span><br/>
+        <span style={{ color:"#888" }}>Update goals after each match. Top scorer wins £{PRIZES.goldenBoot}.</span><br/>
         <strong style={{ color:"#F5F0E8" }}>Results tab</strong> — HomeTeam | HomeGoals | AwayTeam | AwayGoals &nbsp;
-        <span style={{ color:"#555" }}>Leave goals blank for unplayed matches.</span><br/>
-        <span style={{ color:"#444" }}>Share URL (no admin): theshedbangers.co.uk/sweepstake</span>
+        <span style={{ color:"#888" }}>Leave goals blank for unplayed matches.</span><br/>
+        <span style={{ color:"#777" }}>Share URL (no admin): theshedbangers.co.uk/sweepstake</span>
       </div>
     </div>
   );
@@ -778,7 +797,7 @@ function ScoringGuide() {
 
   return (
     <div className="fade-up">
-      <p style={{ color:"#888", fontSize:".85rem", textAlign:"center", marginBottom:28, lineHeight:1.7 }}>
+      <p style={{ color:"#bbb", fontSize:".85rem", textAlign:"center", marginBottom:28, lineHeight:1.7 }}>
         You have 4 teams and 1 Golden Boot player.<br/>
         Points accumulate throughout the tournament — check back after every round.
       </p>
@@ -789,10 +808,10 @@ function ScoringGuide() {
             <p style={{ fontFamily:"'Bebas Neue',sans-serif", letterSpacing:2, color:"#FFD700", fontSize:"1rem", marginBottom:2 }}>
               {section.title}
             </p>
-            <p style={{ color:"#555", fontSize:".78rem" }}>{section.subtitle}</p>
+            <p style={{ color:"#888", fontSize:".85rem" }}>{section.subtitle}</p>
           </div>
           <div style={{
-            background:"rgba(255,255,255,.03)", border:"1px solid #1a1a1a",
+            background:"rgba(255,255,255,.03)", border:"1px solid #444",
             borderRadius:6, overflow:"hidden"
           }}>
             {section.rows.map((row, ri) => (
@@ -802,14 +821,14 @@ function ScoringGuide() {
                 borderBottom: ri < section.rows.length-1 ? "1px solid #151515" : "none",
                 background: ri % 2 === 0 ? "transparent" : "rgba(255,255,255,.015)",
               }}>
-                <span style={{ flex:1, color:"#d0c8bc", fontSize:".9rem" }}>{row.event}</span>
+                <span style={{ flex:1, color:"#e8e0d4", fontSize:".9rem" }}>{row.event}</span>
                 <span style={{
                   fontFamily:"'Bebas Neue',sans-serif", letterSpacing:1,
                   fontSize:"1rem", color:"#FFD700",
                   minWidth:80, textAlign:"right", flexShrink:0
                 }}>{row.pts}</span>
                 <span style={{
-                  color:"#444", fontSize:".75rem",
+                  color:"#777", fontSize:".82rem",
                   minWidth:160, textAlign:"right", flexShrink:0
                 }}>{row.note}</span>
               </div>
@@ -822,7 +841,7 @@ function ScoringGuide() {
         <p style={{ fontFamily:"'Bebas Neue',sans-serif", letterSpacing:2, color:"#FFD700", fontSize:".85rem", marginBottom:10 }}>
           💡 EXAMPLE
         </p>
-        <p style={{ color:"#888", fontSize:".85rem", lineHeight:1.9 }}>
+        <p style={{ color:"#bbb", fontSize:".85rem", lineHeight:1.9 }}>
           Say you have <span style={{ color:"#F5F0E8" }}>England</span> — they win 3 group games (9pts), reach the QF (5+10pts), 
           then go out. That's <span style={{ color:"#FFD700" }}>24pts</span> from England alone.<br/>
           Your Golden Boot player <span style={{ color:"#F5F0E8" }}>Harry Kane</span> scores 4 goals — 
@@ -876,13 +895,13 @@ function Sweepstake() {
   const delay = ms => new Promise(res => setTimeout(res, ms));
 
   async function safeTab(name, parser, fallback) {
-        try {
-        const text = await fetchTab(name);
-          return parser(text);
-        } catch(e) {
-          console.warn(`Tab "${name}" failed:`, e.message);
-          return fallback;
-        }
+    try {
+      const text = await fetchTab(name);
+      return parser(text);
+    } catch(e) {
+      console.warn(`Tab "${name}" failed:`, e.message);
+      return fallback;
+    }
   }
 
   async function fetchLocal(path, parser, fallback) {
@@ -966,7 +985,7 @@ function Sweepstake() {
             margin:"0 0 10px", opacity:.85
           }}>World Cup 2026 Sweepstake</h2>
           <div style={{ width:100, height:2, background:"linear-gradient(90deg,transparent,#FFD700,transparent)", margin:"0 auto 8px" }}/>
-          <p style={{ color:"#555", fontSize:".76rem", letterSpacing:3, textTransform:"uppercase" }}>
+          <p style={{ color:"#888", fontSize:".76rem", letterSpacing:3, textTransform:"uppercase" }}>
             USA · Canada · Mexico · 11 Jun – 19 Jul
           </p>
         </div>
@@ -974,7 +993,7 @@ function Sweepstake() {
         {status==="loading" && (
           <div style={{ textAlign:"center", padding:"60px 0" }}>
             <div style={{ width:34, height:34, border:"3px solid #222", borderTopColor:"#FFD700", borderRadius:"50%", animation:"spin .8s linear infinite", margin:"0 auto 16px" }}/>
-            <p style={{ color:"#555", letterSpacing:2, fontSize:".8rem", textTransform:"uppercase" }}>Loading…</p>
+            <p style={{ color:"#888", letterSpacing:2, fontSize:".8rem", textTransform:"uppercase" }}>Loading…</p>
           </div>
         )}
 
@@ -991,12 +1010,12 @@ function Sweepstake() {
             <PrizesPanel entries={entries} statusMap={statusMap} scores={scores} gbList={gbList}/>
 
             {/* Stats bar */}
-            <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap", marginBottom:20, fontSize:".8rem", color:"#555" }}>
+            <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap", marginBottom:20, fontSize:".8rem", color:"#888" }}>
               <span>👥 {entries.length} players</span>
               <span>·</span>
               <span>
                 ⚽ {matchCount} matches played
-                {scoresLoading && <span style={{ color:"#FFD700", fontSize:".72rem", marginLeft:6 }}>⟳ updating…</span>}
+                {scoresLoading && <span style={{ color:"#FFD700", fontSize:".82rem", marginLeft:6 }}>⟳ updating…</span>}
               </span>
               <span>·</span>
               <span style={{ color:activeCount>0?"#90CDF4":"#555" }}>
@@ -1034,7 +1053,7 @@ function Sweepstake() {
               <button className="btn btn-gold"  onClick={()=>window.print()}>🖨 Print</button>
             </div>
 
-            <p style={{ textAlign:"center", color:"#1a1a1a", fontSize:".7rem", letterSpacing:2, marginTop:28 }}>
+            <p style={{ textAlign:"center", color:"#555", fontSize:".8rem", letterSpacing:2, marginTop:28 }}>
               FRENCHIE'S SWEEPSTAKE · WORLD CUP 2026
             </p>
           </div>
