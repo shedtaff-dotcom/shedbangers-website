@@ -2,9 +2,8 @@ name: Sync World Cup Data
 
 on:
   schedule:
-    # Every 20 minutes during match hours (11:00-23:59 UTC)
     - cron: '*/20 11-23 * * *'
-  workflow_dispatch: # Manual trigger from Actions tab
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -16,115 +15,116 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Fetch results and scorers
+      - name: Fetch all data from football-data.org
         env:
           API_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
         run: |
-          echo "Fetching World Cup 2026 finished matches..."
-
-          curl -s \
-            -H "X-Auth-Token: ${API_KEY}" \
+          echo "Fetching finished matches..."
+          curl -s -H "X-Auth-Token: ${API_KEY}" \
             "https://api.football-data.org/v4/competitions/WC/matches?status=FINISHED" \
             -o /tmp/matches.json
 
           echo "Fetching top scorers..."
-
-          curl -s \
-            -H "X-Auth-Token: ${API_KEY}" \
+          curl -s -H "X-Auth-Token: ${API_KEY}" \
             "https://api.football-data.org/v4/competitions/WC/scorers?limit=50" \
             -o /tmp/scorers.json
 
-          # Debug: show first 200 chars of each response
-          echo "Matches response preview:"
-          python3 -c "import json; d=json.load(open('/tmp/matches.json')); print('matches count:', len(d.get('matches',[])), '| error:', d.get('message','none'))"
-          echo "Scorers response preview:"
-          python3 -c "import json; d=json.load(open('/tmp/scorers.json')); print('scorers count:', len(d.get('scorers',[])), '| error:', d.get('message','none'))"
+          echo "Fetching team names..."
+          curl -s -H "X-Auth-Token: ${API_KEY}" \
+            "https://api.football-data.org/v4/competitions/WC/teams" \
+            -o /tmp/teams.json
+
+          echo "--- Response previews ---"
+          python3 -c "import json; d=json.load(open('/tmp/matches.json')); print('matches:', len(d.get('matches',[])), '| msg:', d.get('message','ok'))"
+          python3 -c "import json; d=json.load(open('/tmp/scorers.json')); print('scorers:', len(d.get('scorers',[])), '| msg:', d.get('message','ok'))"
+          python3 -c "import json; d=json.load(open('/tmp/teams.json'));   print('teams:  ', len(d.get('teams',[])),   '| msg:', d.get('message','ok'))"
 
           python3 << 'PYEOF'
-          import json, csv
+import json, csv
 
-          # ── Results ──────────────────────────────────────────────────────────
-          with open('/tmp/matches.json') as f:
-              data = json.load(f)
+# ── Results ──────────────────────────────────────────────────────────────────
+with open('/tmp/matches.json') as f:
+    data = json.load(f)
 
-          rows = []
-          for match in data.get('matches', []):
-              status = match.get('status', '')
-              if status != 'FINISHED':
-                  continue
-              home      = match.get('homeTeam', {}).get('name', '')
-              away      = match.get('awayTeam', {}).get('name', '')
-              score     = match.get('score', {}).get('fullTime', {})
-              home_goals = score.get('home')
-              away_goals = score.get('away')
-              if home and away and home_goals is not None and away_goals is not None:
-                  rows.append([home, int(home_goals), int(away_goals), away])
+rows = []
+for match in data.get('matches', []):
+    if match.get('status') != 'FINISHED':
+        continue
+    home       = match.get('homeTeam', {}).get('name', '')
+    away       = match.get('awayTeam', {}).get('name', '')
+    score      = match.get('score', {}).get('fullTime', {})
+    home_goals = score.get('home')
+    away_goals = score.get('away')
+    if home and away and home_goals is not None and away_goals is not None:
+        rows.append([home, int(home_goals), int(away_goals), away])
 
-          rows.sort(key=lambda r: r[0])
+rows.sort(key=lambda r: r[0])
 
-          with open('sweepstake/data/results.csv', 'w', newline='', encoding='utf-8') as f:
-              writer = csv.writer(f)
-              writer.writerow(['HomeTeam', 'HomeGoals', 'AwayGoals', 'AwayTeam'])
-              writer.writerows(rows)
+with open('sweepstake/data/results.csv', 'w', newline='', encoding='utf-8') as f:
+    writer = csv.writer(f)
+    writer.writerow(['HomeTeam', 'HomeGoals', 'AwayGoals', 'AwayTeam'])
+    writer.writerows(rows)
 
-          print(f"Results: {len(rows)} finished matches written")
+print(f"Results: {len(rows)} matches written")
 
-          # ── Top Scorers ───────────────────────────────────────────────────────
-          with open('/tmp/scorers.json') as f:
-              data = json.load(f)
+# ── Top Scorers ───────────────────────────────────────────────────────────────
+with open('/tmp/scorers.json') as f:
+    data = json.load(f)
 
-          scorers = []
-          for entry in data.get('scorers', []):
-              name  = entry.get('player', {}).get('name', '')
-              team  = entry.get('team',   {}).get('name', '')
-              goals = entry.get('goals', 0) or 0
-              if name:
-                  scorers.append([name, goals, team])
+scorers = []
+for entry in data.get('scorers', []):
+    name  = entry.get('player', {}).get('name', '')
+    team  = entry.get('team',   {}).get('name', '')
+    goals = entry.get('goals', 0) or 0
+    if name:
+        scorers.append([name, goals, team])
 
-          scorers.sort(key=lambda r: -r[1])
+scorers.sort(key=lambda r: -r[1])
 
-          with open('sweepstake/data/topscorers.csv', 'w', newline='', encoding='utf-8') as f:
-              writer = csv.writer(f)
-              writer.writerow(['Player', 'Goals', 'Team'])
-              writer.writerows(scorers)
+with open('sweepstake/data/topscorers.csv', 'w', newline='', encoding='utf-8') as f:
+    writer = csv.writer(f)
+    writer.writerow(['Player', 'Goals', 'Team'])
+    writer.writerows(scorers)
 
-          print(f"Scorers: {len(scorers)} players written")
+print(f"Scorers: {len(scorers)} players written")
 
-          # ── Teams ─────────────────────────────────────────────────────────────
-          with open('/tmp/teams.json') as f:
-              data = json.load(f)
+# ── Teams ─────────────────────────────────────────────────────────────────────
+with open('/tmp/teams.json') as f:
+    data = json.load(f)
 
-          teams = []
-          for t in data.get('teams', []):
-              name      = t.get('name', '')
-              short     = t.get('shortName', '')
-              tla       = t.get('tla', '')
-              if name:
-                  teams.append([name, short, tla])
+teams = []
+for t in data.get('teams', []):
+    name  = t.get('name', '')
+    short = t.get('shortName', '')
+    tla   = t.get('tla', '')
+    if name:
+        teams.append([name, short, tla])
 
-          teams.sort(key=lambda r: r[0])
+teams.sort(key=lambda r: r[0])
 
-          with open('sweepstake/data/teams.csv', 'w', newline='', encoding='utf-8') as f:
-              writer = csv.writer(f)
-              writer.writerow(['Name', 'ShortName', 'TLA'])
-              writer.writerows(teams)
+with open('sweepstake/data/teams.csv', 'w', newline='', encoding='utf-8') as f:
+    writer = csv.writer(f)
+    writer.writerow(['Name', 'ShortName', 'TLA'])
+    writer.writerows(teams)
 
-          print(f"Teams: {len(teams)} teams written")
-          PYEOF
+print(f"Teams: {len(teams)} teams written")
+PYEOF
 
       - name: Commit if data changed
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add sweepstake/data/results.csv sweepstake/data/topscorers.csv sweepstake/data/teams.csv
+          git add sweepstake/data/results.csv \
+                  sweepstake/data/topscorers.csv \
+                  sweepstake/data/teams.csv
 
           if git diff --staged --quiet; then
-            echo "No changes — data unchanged since last run"
+            echo "No changes to commit"
           else
-            MATCHES=$(tail -n +2 sweepstake/data/results.csv | wc -l | tr -d ' ')
+            MATCHES=$(tail -n +2 sweepstake/data/results.csv  | wc -l | tr -d ' ')
             SCORERS=$(tail -n +2 sweepstake/data/topscorers.csv | wc -l | tr -d ' ')
-            TEAMS=$(tail -n +2 sweepstake/data/teams.csv | wc -l | tr -d ' ')
+            TEAMS=$(tail -n +2   sweepstake/data/teams.csv    | wc -l | tr -d ' ')
             git commit -m "⚽ WC2026: ${MATCHES} results, ${SCORERS} scorers, ${TEAMS} teams [skip ci]"
             git push
             echo "Pushed updated data"
