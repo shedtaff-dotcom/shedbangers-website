@@ -46,7 +46,7 @@ const TEAMS = [
   { rank:13, name:"Colombia",       flag:"🇨🇴", tier:1 },
   { rank:14, name:"Senegal",        flag:"🇸🇳", tier:2 },
   { rank:15, name:"Mexico",         flag:"🇲🇽", tier:2 },
-  { rank:16, name:"United States",  flag:"🇺🇸", tier:2 },
+  { rank:16, name:"USA",            flag:"🇺🇸", tier:2 },
   { rank:17, name:"Uruguay",        flag:"🇺🇾", tier:2 },
   { rank:18, name:"Japan",          flag:"🇯🇵", tier:2 },
   { rank:19, name:"Switzerland",    flag:"🇨🇭", tier:2 },
@@ -62,12 +62,12 @@ const TEAMS = [
   { rank:36, name:"Algeria",        flag:"🇩🇿", tier:3 },
   { rank:39, name:"Sweden",         flag:"🇸🇪", tier:3 },
   { rank:40, name:"Tunisia",        flag:"🇹🇳", tier:3 },
-  { rank:41, name:"Czech Republic",        flag:"🇨🇿", tier:3 },
+  { rank:41, name:"Czechia",        flag:"🇨🇿", tier:3 },
   { rank:42, name:"Turkiye",        flag:"🇹🇷", tier:3 },
   { rank:44, name:"Norway",         flag:"🇳🇴", tier:3 },
   { rank:47, name:"Scotland",       flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", tier:3 },
   { rank:51, name:"DR Congo",       flag:"🇨🇩", tier:3 },
-  { rank:52, name:"Bosnia and Herzegovina", flag:"🇧🇦", tier:3 },
+  { rank:52, name:"Bosnia & Herz.", flag:"🇧🇦", tier:3 },
   { rank:53, name:"Panama",         flag:"🇵🇦", tier:3 },
   { rank:57, name:"Saudi Arabia",   flag:"🇸🇦", tier:3 },
   { rank:60, name:"South Africa",   flag:"🇿🇦", tier:3 },
@@ -876,13 +876,13 @@ function Sweepstake() {
   const delay = ms => new Promise(res => setTimeout(res, ms));
 
   async function safeTab(name, parser, fallback) {
-        try {
-        const text = await fetchTab(name);
-          return parser(text);
-        } catch(e) {
-          console.warn(`Tab "${name}" failed:`, e.message);
-          return fallback;
-        }
+    try {
+      const text = await fetchTab(name);
+      return parser(text);
+    } catch(e) {
+      console.warn(`Tab "${name}" failed:`, e.message);
+      return fallback;
+    }
   }
 
   async function fetchLocal(path, parser, fallback) {

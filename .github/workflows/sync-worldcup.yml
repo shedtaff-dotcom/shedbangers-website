@@ -1,0 +1,125 @@
+name: Sync World Cup Data
+
+on:
+  schedule:
+    # Every 20 minutes during tournament hours (06:00-23:00 UTC)
+    # World Cup matches run June 11 - July 19 2026
+    - cron: '*/20 6-23 * * *'
+  workflow_dispatch:  # Allow manual trigger from GitHub Actions tab
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # Needed to commit CSVs back to repo
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Fetch results from API-Football
+        env:
+          API_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: |
+          echo "Fetching fixtures for World Cup 2026 (league=1, season=2026)..."
+
+          curl -s \
+            -H "x-apisports-key: ${API_KEY}" \
+            "https://v3.football.api-sports.io/fixtures?league=1&season=2026" \
+            -o /tmp/fixtures_raw.json
+
+          # Check we got valid data
+          if ! python3 -c "import json,sys; d=json.load(open('/tmp/fixtures_raw.json')); sys.exit(0 if d.get('results',0)>=0 else 1)"; then
+            echo "ERROR: Invalid response from fixtures endpoint"
+            cat /tmp/fixtures_raw.json
+            exit 1
+          fi
+
+          echo "Got $(python3 -c "import json; d=json.load(open('/tmp/fixtures_raw.json')); print(d.get('results',0))") fixtures"
+
+          # Convert to CSV — only include finished matches (FT, AET, PEN)
+          python3 << 'PYEOF'
+          import json, csv
+
+          with open('/tmp/fixtures_raw.json') as f:
+              data = json.load(f)
+
+          finished_statuses = {'FT', 'AET', 'PEN', 'AWD', 'WO'}
+          rows = []
+
+          for fixture in data.get('response', []):
+              status = fixture.get('fixture', {}).get('status', {}).get('short', '')
+              if status not in finished_statuses:
+                  continue
+
+              home = fixture.get('teams', {}).get('home', {}).get('name', '')
+              away = fixture.get('teams', {}).get('away', {}).get('name', '')
+              home_goals = fixture.get('goals', {}).get('home')
+              away_goals = fixture.get('goals', {}).get('away')
+
+              if home and away and home_goals is not None and away_goals is not None:
+                  rows.append([home, home_goals, away_goals, away])
+
+          rows.sort(key=lambda r: r[0])  # sort by home team for consistency
+
+          with open('sweepstake/data/results.csv', 'w', newline='') as f:
+              writer = csv.writer(f)
+              writer.writerow(['HomeTeam', 'HomeGoals', 'AwayGoals', 'AwayTeam'])
+              writer.writerows(rows)
+
+          print(f"Written {len(rows)} completed matches to results.csv")
+          PYEOF
+
+      - name: Fetch top scorers from API-Football
+        env:
+          API_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: |
+          echo "Fetching top scorers..."
+
+          curl -s \
+            -H "x-apisports-key: ${API_KEY}" \
+            "https://v3.football.api-sports.io/players/topscorers?league=1&season=2026" \
+            -o /tmp/topscorers_raw.json
+
+          python3 << 'PYEOF'
+          import json, csv
+
+          with open('/tmp/topscorers_raw.json') as f:
+              data = json.load(f)
+
+          rows = []
+          for entry in data.get('response', []):
+              name  = entry.get('player', {}).get('name', '')
+              team  = entry.get('statistics', [{}])[0].get('team', {}).get('name', '')
+              goals = entry.get('statistics', [{}])[0].get('goals', {}).get('total') or 0
+              if name:
+                  rows.append([name, goals, team])
+
+          # Sort by goals descending
+          rows.sort(key=lambda r: -r[1])
+
+          with open('sweepstake/data/topscorers.csv', 'w', newline='') as f:
+              writer = csv.writer(f)
+              writer.writerow(['Player', 'Goals', 'Team'])
+              writer.writerows(rows)
+
+          print(f"Written {len(rows)} players to topscorers.csv")
+          PYEOF
+
+      - name: Commit and push if data changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add sweepstake/data/results.csv sweepstake/data/topscorers.csv
+
+          # Only commit if something actually changed
+          if git diff --staged --quiet; then
+            echo "No changes to commit — data unchanged"
+          else
+            MATCHES=$(tail -n +2 sweepstake/data/results.csv | wc -l)
+            SCORERS=$(tail -n +2 sweepstake/data/topscorers.csv | wc -l)
+            git commit -m "⚽ World Cup data: ${MATCHES} results, ${SCORERS} scorers [skip ci]"
+            git push
+            echo "Data updated and pushed"
+          fi
