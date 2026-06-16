@@ -32,54 +32,54 @@ const PRIZES = { winner: 40, goldenBoot: 10, pointsTable: 10 };
 
 // ─── TEAMS ───────────────────────────────────────────────────────────────────
 const TEAMS = [
-  { rank:1,  name:"France",         flag:"🇫🇷", tier:1 },
-  { rank:2,  name:"Spain",          flag:"🇪🇸", tier:1 },
-  { rank:3,  name:"Argentina",      flag:"🇦🇷", tier:1 },
-  { rank:4,  name:"England",        flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", tier:1 },
-  { rank:5,  name:"Portugal",       flag:"🇵🇹", tier:1 },
-  { rank:6,  name:"Brazil",         flag:"🇧🇷", tier:1 },
-  { rank:7,  name:"Netherlands",    flag:"🇳🇱", tier:1 },
-  { rank:8,  name:"Morocco",        flag:"🇲🇦", tier:1 },
-  { rank:9,  name:"Belgium",        flag:"🇧🇪", tier:1 },
-  { rank:10, name:"Germany",        flag:"🇩🇪", tier:1 },
-  { rank:11, name:"Croatia",        flag:"🇭🇷", tier:1 },
-  { rank:13, name:"Colombia",       flag:"🇨🇴", tier:1 },
-  { rank:14, name:"Senegal",        flag:"🇸🇳", tier:2 },
-  { rank:15, name:"Mexico",         flag:"🇲🇽", tier:2 },
-  { rank:16, name:"USA",            flag:"🇺🇸", tier:2 },
-  { rank:17, name:"Uruguay",        flag:"🇺🇾", tier:2 },
-  { rank:18, name:"Japan",          flag:"🇯🇵", tier:2 },
-  { rank:19, name:"Switzerland",    flag:"🇨🇭", tier:2 },
-  { rank:21, name:"Iran",           flag:"🇮🇷", tier:2 },
-  { rank:23, name:"Austria",        flag:"🇦🇹", tier:2 },
-  { rank:24, name:"Ecuador",        flag:"🇪🇨", tier:2 },
-  { rank:25, name:"South Korea",    flag:"🇰🇷", tier:2 },
-  { rank:26, name:"Australia",      flag:"🇦🇺", tier:2 },
-  { rank:29, name:"Egypt",          flag:"🇪🇬", tier:2 },
-  { rank:30, name:"Canada",         flag:"🇨🇦", tier:3 },
-  { rank:33, name:"Ivory Coast",    flag:"🇨🇮", tier:3 },
-  { rank:35, name:"Qatar",          flag:"🇶🇦", tier:3 },
-  { rank:36, name:"Algeria",        flag:"🇩🇿", tier:3 },
-  { rank:39, name:"Sweden",         flag:"🇸🇪", tier:3 },
-  { rank:40, name:"Tunisia",        flag:"🇹🇳", tier:3 },
-  { rank:41, name:"Czechia",        flag:"🇨🇿", tier:3 },
-  { rank:42, name:"Turkiye",        flag:"🇹🇷", tier:3 },
-  { rank:44, name:"Norway",         flag:"🇳🇴", tier:3 },
-  { rank:47, name:"Scotland",       flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", tier:3 },
-  { rank:51, name:"DR Congo",       flag:"🇨🇩", tier:3 },
-  { rank:52, name:"Bosnia & Herz.", flag:"🇧🇦", tier:3 },
-  { rank:53, name:"Panama",         flag:"🇵🇦", tier:3 },
-  { rank:57, name:"Saudi Arabia",   flag:"🇸🇦", tier:3 },
-  { rank:60, name:"South Africa",   flag:"🇿🇦", tier:3 },
-  { rank:61, name:"Iraq",           flag:"🇮🇶", tier:3 },
-  { rank:62, name:"Uzbekistan",     flag:"🇺🇿", tier:3 },
-  { rank:64, name:"Paraguay",       flag:"🇵🇾", tier:3 },
-  { rank:65, name:"Ghana",          flag:"🇬🇭", tier:3 },
-  { rank:68, name:"Jordan",         flag:"🇯🇴", tier:3 },
-  { rank:70, name:"Cape Verde",     flag:"🇨🇻", tier:3 },
-  { rank:81, name:"Curazao",        flag:"🇨🇼", tier:3 },
-  { rank:83, name:"Haiti",          flag:"🇭🇹", tier:3 },
-  { rank:95, name:"New Zealand",    flag:"🇳🇿", tier:3 },
+  { rank:1,  name:"France", flagImg:"https://flagcdn.com/24x18/fr.png",         tier:1 },
+  { rank:2,  name:"Spain", flagImg:"https://flagcdn.com/24x18/es.png",          tier:1 },
+  { rank:3,  name:"Argentina", flagImg:"https://flagcdn.com/24x18/ar.png",      tier:1 },
+  { rank:4,  name:"England", flagImg:"https://flagcdn.com/24x18/gb-eng.png",        tier:1, flagImg:"https://flagcdn.com/24x18/gb-eng.png" },
+  { rank:5,  name:"Portugal", flagImg:"https://flagcdn.com/24x18/pt.png",       tier:1 },
+  { rank:6,  name:"Brazil", flagImg:"https://flagcdn.com/24x18/br.png",         tier:1 },
+  { rank:7,  name:"Netherlands", flagImg:"https://flagcdn.com/24x18/nl.png",    tier:1 },
+  { rank:8,  name:"Morocco", flagImg:"https://flagcdn.com/24x18/ma.png",        tier:1 },
+  { rank:9,  name:"Belgium", flagImg:"https://flagcdn.com/24x18/be.png",        tier:1 },
+  { rank:10, name:"Germany", flagImg:"https://flagcdn.com/24x18/de.png",        tier:1 },
+  { rank:11, name:"Croatia", flagImg:"https://flagcdn.com/24x18/hr.png",        tier:1 },
+  { rank:13, name:"Colombia", flagImg:"https://flagcdn.com/24x18/co.png",       tier:1 },
+  { rank:14, name:"Senegal", flagImg:"https://flagcdn.com/24x18/sn.png",        tier:2 },
+  { rank:15, name:"Mexico", flagImg:"https://flagcdn.com/24x18/mx.png",         tier:2 },
+  { rank:16, name:"USA", flagImg:"https://flagcdn.com/24x18/us.png",            tier:2 },
+  { rank:17, name:"Uruguay", flagImg:"https://flagcdn.com/24x18/uy.png",        tier:2 },
+  { rank:18, name:"Japan", flagImg:"https://flagcdn.com/24x18/jp.png",          tier:2 },
+  { rank:19, name:"Switzerland", flagImg:"https://flagcdn.com/24x18/ch.png",    tier:2 },
+  { rank:21, name:"Iran", flagImg:"https://flagcdn.com/24x18/ir.png",           tier:2 },
+  { rank:23, name:"Austria", flagImg:"https://flagcdn.com/24x18/at.png",        tier:2 },
+  { rank:24, name:"Ecuador", flagImg:"https://flagcdn.com/24x18/ec.png",        tier:2 },
+  { rank:25, name:"South Korea", flagImg:"https://flagcdn.com/24x18/kr.png",    tier:2 },
+  { rank:26, name:"Australia", flagImg:"https://flagcdn.com/24x18/au.png",      tier:2 },
+  { rank:29, name:"Egypt", flagImg:"https://flagcdn.com/24x18/eg.png",          tier:2 },
+  { rank:30, name:"Canada", flagImg:"https://flagcdn.com/24x18/ca.png",         tier:3 },
+  { rank:33, name:"Ivory Coast", flagImg:"https://flagcdn.com/24x18/ci.png",    tier:3 },
+  { rank:35, name:"Qatar", flagImg:"https://flagcdn.com/24x18/qa.png",          tier:3 },
+  { rank:36, name:"Algeria", flagImg:"https://flagcdn.com/24x18/dz.png",        tier:3 },
+  { rank:39, name:"Sweden", flagImg:"https://flagcdn.com/24x18/se.png",         tier:3 },
+  { rank:40, name:"Tunisia", flagImg:"https://flagcdn.com/24x18/tn.png",        tier:3 },
+  { rank:41, name:"Czechia", flagImg:"https://flagcdn.com/24x18/cz.png",        tier:3 },
+  { rank:42, name:"Turkiye", flagImg:"https://flagcdn.com/24x18/tr.png",        tier:3 },
+  { rank:44, name:"Norway", flagImg:"https://flagcdn.com/24x18/no.png",         tier:3 },
+  { rank:47, name:"Scotland", flagImg:"https://flagcdn.com/24x18/gb-sct.png",       tier:3, flagImg:"https://flagcdn.com/24x18/gb-sct.png" },
+  { rank:51, name:"DR Congo", flagImg:"https://flagcdn.com/24x18/cd.png",       tier:3 },
+  { rank:52, name:"Bosnia & Herz.", flagImg:"https://flagcdn.com/24x18/ba.png", tier:3 },
+  { rank:53, name:"Panama", flagImg:"https://flagcdn.com/24x18/pa.png",         tier:3 },
+  { rank:57, name:"Saudi Arabia", flagImg:"https://flagcdn.com/24x18/sa.png",   tier:3 },
+  { rank:60, name:"South Africa", flagImg:"https://flagcdn.com/24x18/za.png",   tier:3 },
+  { rank:61, name:"Iraq", flagImg:"https://flagcdn.com/24x18/iq.png",           tier:3 },
+  { rank:62, name:"Uzbekistan", flagImg:"https://flagcdn.com/24x18/uz.png",     tier:3 },
+  { rank:64, name:"Paraguay", flagImg:"https://flagcdn.com/24x18/py.png",       tier:3 },
+  { rank:65, name:"Ghana", flagImg:"https://flagcdn.com/24x18/gh.png",          tier:3 },
+  { rank:68, name:"Jordan", flagImg:"https://flagcdn.com/24x18/jo.png",         tier:3 },
+  { rank:70, name:"Cape Verde", flagImg:"https://flagcdn.com/24x18/cv.png",     tier:3 },
+  { rank:81, name:"Curaçao", flagImg:"https://flagcdn.com/24x18/cw.png",        tier:3 },
+  { rank:83, name:"Haiti", flagImg:"https://flagcdn.com/24x18/ht.png",          tier:3 },
+  { rank:95, name:"New Zealand", flagImg:"https://flagcdn.com/24x18/nz.png",    tier:3 },
 ];
 
 // API name -> sheet/JSX name normalisation
@@ -101,7 +101,16 @@ function normaliseTeamName(name) {
 function teamInfo(name) {
   const n = normaliseTeamName(name);
   return TEAMS.find(t => t.name.toLowerCase() === n.toLowerCase()) ||
-         { flag:"🏳️", tier:3, rank:"?" };
+         { flagImg:"https://flagcdn.com/24x18/un.png", tier:3, rank:"?" };
+}
+
+// Render flag as image — works on all platforms including Windows
+function FlagEl({ info }) {
+  return React.createElement("img", {
+    src: info.flagImg,
+    alt: info.name || "",
+    style: { width:24, height:18, objectFit:"cover", borderRadius:2, verticalAlign:"middle", flexShrink:0 }
+  });
 }
 
 // ─── STATUS HELPERS ───────────────────────────────────────────────────────────
@@ -422,7 +431,7 @@ function TeamRow({ name, rank, statusMap, primary, teamRecords }) {
       border:`1px solid ${TIER_COLOR[info.tier]}1a`,
       opacity: out ? 0.5 : 1,
     }}>
-      <span style={{ fontSize:"1.05rem" }}>{info.flag}</span>
+      {React.createElement(FlagEl, { info })}
       <span style={{
         flex:1, fontSize:".88rem",
         color: out ? "#444" : primary ? "#F5F0E8" : "#999",
@@ -1055,6 +1064,11 @@ function Sweepstake() {
 
             <p style={{ textAlign:"center", color:"#555", fontSize:".8rem", letterSpacing:2, marginTop:28 }}>
               FRENCHIE'S SWEEPSTAKE · WORLD CUP 2026
+            </p>
+            <p style={{ textAlign:"center", fontSize:".72rem", marginTop:6, opacity:.35 }}>
+              <img src="https://flagcdn.com/16x12/gb-wls.png" alt="Wales"
+                style={{verticalAlign:"middle", marginRight:4}}/>
+              Cymru Am Byth
             </p>
           </div>
         )}
