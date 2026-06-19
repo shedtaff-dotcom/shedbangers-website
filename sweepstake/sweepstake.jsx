@@ -24,8 +24,10 @@ const IS_ADMIN = typeof window !== "undefined" &&
 // ─── POINTS SYSTEM ───────────────────────────────────────────────────────────
 const PTS = {
   WIN: 3, DRAW: 1,
-  R16: 5, QF: 10, SF: 15, THIRD: 20, "RUNNER UP": 25, WINNER: 50,
-  GB_GOAL: 5, GB_BONUS: 10,   // bonus auto-awarded to top scorer
+//  R16: 5, QF: 10, SF: 15, THIRD: 20, "RUNNER UP": 25, WINNER: 50,
+  R16: 0, QF: 0, SF: 0, THIRD: 0, "RUNNER UP": 0, WINNER: 0, // removed knockout points to avoid ties, 2026-06-14
+  //GB_GOAL: 5, GB_BONUS: 10,   // bonus auto-awarded to top scorer
+  GB_GOAL: 5, GB_BONUS: 0,   // removed bonus for top scorer to avoid ties, 2026-06-14
 };
 
 const PRIZES = { winner: 40, goldenBoot: 10, pointsTable: 10 };
@@ -777,12 +779,19 @@ function ScoringGuide() {
       title: "⚽ Knockout Stage Bonuses",
       subtitle: "Awarded when your team reaches each round",
       rows: [
-        { event: "Team reaches Round of 16", pts: "+5 pts",  note: "On qualification" },
-        { event: "Team reaches Quarter Final", pts: "+10 pts", note: "Cumulative — stacks" },
-        { event: "Team reaches Semi Final",  pts: "+15 pts", note: "Cumulative — stacks" },
-        { event: "Team finishes 3rd",        pts: "+20 pts", note: "3rd place play-off" },
-        { event: "Team is Runner Up",        pts: "+25 pts", note: "Reaches the final" },
-        { event: "Team wins the World Cup",  pts: "+50 pts", note: "🏆 The big one" },
+      // removed the bonus points for knockout stages as they are already included in the match results
+      //  { event: "Team reaches Round of 16", pts: "+5 pts",  note: "On qualification" },
+      //  { event: "Team reaches Quarter Final", pts: "+10 pts", note: "Cumulative — stacks" },
+      //  { event: "Team reaches Semi Final",  pts: "+15 pts", note: "Cumulative — stacks" },
+      //  { event: "Team finishes 3rd",        pts: "+20 pts", note: "3rd place play-off" },
+      //  { event: "Team is Runner Up",        pts: "+25 pts", note: "Reaches the final" },
+      //  { event: "Team wins the World Cup",  pts: "+50 pts", note: "🏆 The big one" },
+        { event: "Team reaches Round of 16", pts: "+0 pts",  note: "On qualification" },
+        { event: "Team reaches Quarter Final", pts: "+0 pts", note: "Cumulative — stacks" },
+        { event: "Team reaches Semi Final",  pts: "+0 pts", note: "Cumulative — stacks" },
+        { event: "Team finishes 3rd",        pts: "+0 pts", note: "3rd place play-off" },
+        { event: "Team is Runner Up",        pts: "+0 pts", note: "Reaches the final" },
+        { event: "Team wins the World Cup",  pts: "+0 pts", note: "🏆 The big one" },
       ]
     },
     {
