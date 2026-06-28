@@ -1,5 +1,5 @@
 Player,Goals,Team
-Lionel Messi,5,Argentina
+Lionel Messi,6,Argentina
 Vinicius Junior,4,Brazil
 Kylian Mbappé,4,France
 Erling Haaland,4,Norway
@@ -7,6 +7,7 @@ Ousmane Dembélé,4,France
 Ismael Saibari,3,Morocco
 Deniz Undav,3,Germany
 Elijah Just,3,New Zealand
+Yoane Wissa,3,DR Congo
 Harry Kane,3,England
 Johan Manzambi,3,Switzerland
 Jonathan David,3,Canada
@@ -22,6 +23,7 @@ Daichi Kamada,2,Japan
 Yasin Ayari,2,Sweden
 Maximiliano Araújo,2,Uruguay
 Ramin Rezaeian,2,Iran
+Marko Arnautovic,2,Austria
 Jude Bellingham,2,England
 Daniel Muñoz,2,Colombia
 Ruben Vargas,2,Switzerland
@@ -34,6 +36,7 @@ Cristiano Ronaldo,2,Portugal
 Nicolas Pépé,2,Ivory Coast
 Pape Gueye,2,Senegal
 Leandro Trossard,2,Belgium
+Riyad Mahrez,2,Algeria
 Raúl Jiménez,1,Mexico
 Ladislav Krejčí,1,Czechia
 In-beom Hwang,1,South Korea
@@ -46,6 +49,3 @@ Boualem Khoukhi,1,Qatar
 John McGinn,1,Scotland
 Nestor Irankunda,1,Australia
 Connor Metcalfe,1,Australia
-Felix Kalu Nmecha,1,Germany
-Livano Comenencia,1,Curaçao
-Nico Schlotterbeck,1,Germany
