@@ -1,11 +1,11 @@
 Player,Goals,Team
-Kylian Mbappé,9,France
+Kylian Mbappé,10,France
 Lionel Messi,8,Argentina
 Erling Haaland,7,Norway
+Jude Bellingham,7,England
 Harry Kane,6,England
-Jude Bellingham,6,England
+Ousmane Dembélé,6,France
 Mikel Oyarzabal,5,Spain
-Ousmane Dembélé,5,France
 Julián Quiñones,4,Mexico
 Vinicius Junior,4,Brazil
 Ismaïla Sarr,4,Senegal
@@ -26,6 +26,7 @@ Cristiano Ronaldo,3,Portugal
 Romelu Lukaku,3,Belgium
 Lautaro Martínez,3,Argentina
 Charles De Ketelaere,3,Belgium
+Bukayo Saka,3,England
 Cyle Larin,2,Canada
 Breel Embolo,2,Switzerland
 Crysencio Summerville,2,Netherlands
@@ -48,4 +49,3 @@ Habib Diarra,2,Senegal
 Pape Gueye,2,Senegal
 Leandro Trossard,2,Belgium
 Riyad Mahrez,2,Algeria
-Youri Tielemans,2,Belgium
