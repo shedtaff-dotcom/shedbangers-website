@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Final — Frenchie's Party Game</title>
+  <meta name="description" content="World Cup Final party prediction game — Spain vs Argentina" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600&display=swap" rel="stylesheet" />
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body { background: #0a0a14; color: #F5F0E8; font-family: 'Barlow', sans-serif; -webkit-font-smoothing: antialiased; }
+    #root { min-height: 100vh; }
+    #loading {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 100vh; gap: 16px;
+      color: #FFD700; font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem; letter-spacing: 3px;
+    }
+    .spinner { width: 40px; height: 40px; border: 3px solid #333; border-top-color: #FFD700; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media print { #site-nav, .no-print { display: none !important; } }
+  </style>
+</head>
+<body>
+  <nav id="site-nav" style="background:#0d0d0f;border-bottom:1px solid #1e1e22;padding:10px 24px;font-family:'Barlow',sans-serif;font-size:.85rem;display:flex;align-items:center;gap:16px;">
+    <a href="/" style="color:#888;text-decoration:none;">The Shedbangers</a>
+    <span style="color:#333">›</span>
+    <a href="/sweepstake" style="color:#888;text-decoration:none;">Sweepstake</a>
+    <span style="color:#333">›</span>
+    <span style="color:#FFD700">The Final</span>
+  </nav>
+  <div id="loading">
+    <div class="spinner"></div>
+    <span>Loading the final...</span>
+  </div>
+  <div id="root"></div>
+  <script type="text/babel" src="./final.jsx" data-presets="react"></script>
+  <script>
+    const observer = new MutationObserver(() => {
+      const root = document.getElementById('root');
+      if (root && root.children.length > 0) {
+        document.getElementById('loading').style.display = 'none';
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.getElementById('root'), { childList: true });
+  </script>
+</body>
+</html>
