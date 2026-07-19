@@ -5,8 +5,8 @@
 const { useState, useEffect, useRef } = React;
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
-const PUB_ID   = "2PACX-1vRm-ufKNgAVjNicy9TrTR6zwx4F8L9zLoyiZyiQxrMjbpv8pFSJNzYFTpVTIs8w1gmyGoP_mbzC9Ipq";
-const FINAL_GID = "914805634";
+const PUB_ID   = "2PACX-1vSjeWoTJLAWNBaOk3LCqbYrcBUxzQjbJYJ943_TP85B51-Q2WBt6lmZdpoQiC1dm2BJI_hhyhxMmGPC";
+const FINAL_GID = "2071438602";
 const IS_ADMIN  = typeof window !== "undefined" && window.location.search.includes("admin=true");
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pub?output=csv&single=true&gid=${FINAL_GID}`;
 
