@@ -116,7 +116,8 @@ function FlagEl({ info }) {
 }
 
 // ─── STATUS HELPERS ───────────────────────────────────────────────────────────
-const KNOCKOUT_PTS = { R16:5, QF:10, SF:15, THIRD:20, "RUNNER UP":25, WINNER:50 };
+// const KNOCKOUT_PTS = { R16:5, QF:10, SF:15, THIRD:20, "RUNNER UP":25, WINNER:50 };
+const KNOCKOUT_PTS = { R16:0, QF:0, SF:0, THIRD:0, "RUNNER UP":0, WINNER:0 };
 const STAGE_LABEL  = {
   WINNER:      { label:"🏆 Winner",      color:"#FFD700" },
   "RUNNER UP": { label:"🥈 Runner Up",   color:"#C0C0C0" },
