@@ -23,10 +23,15 @@ const EVENTS = [
 ];
 
 // Score calculation
+function hasValue(v) {
+  // Empty/missing = not entered. "0" is a valid value.
+  return v !== "" && v !== null && v !== undefined && !isNaN(parseInt(v, 10));
+}
+
 function calcScore(prediction, actual, type) {
   const p = parseInt(prediction, 10);
   const a = parseInt(actual, 10);
-  if (isNaN(p) || isNaN(a) || a === 0) return { pts: 0, diff: null, won: false };
+  if (isNaN(p) || !hasValue(actual)) return { pts: 0, diff: null, won: false };
 
   if (type === "time") {
     const diff = Math.abs(p - a);
@@ -74,7 +79,7 @@ function calcTotal(person, actuals) {
   const sa = parseInt(actuals.SpainScore, 10);
   const ap = parseInt(person.ArgScore, 10);
   const aa = parseInt(actuals.ArgScore, 10);
-  if (!isNaN(sp) && !isNaN(ap) && !isNaN(sa) && !isNaN(aa) && (sa > 0 || aa > 0)) {
+  if (!isNaN(sp) && !isNaN(ap) && hasValue(actuals.SpainScore) && hasValue(actuals.ArgScore)) {
     if (sp === sa && ap === aa) {
       total += 50;
       breakdown.push(`Exact scoreline! +50pts`);
@@ -173,7 +178,7 @@ function Scoreboard({ players, actuals }) {
   const eventWinners = {};
   EVENTS.filter(e => e.type === "time").forEach(e => {
     const a = parseInt(actuals[e.key], 10);
-    if (isNaN(a) || a === 0) return;
+    if (!hasValue(actuals[e.key])) return;
 
     let minDiff = Infinity;
     players.forEach(p => {
@@ -261,7 +266,7 @@ function EventCards({ players, actuals }) {
     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:12, marginBottom:32 }}>
       {EVENTS.map(e => {
         const actual  = parseInt(actuals[e.key], 10);
-        const happened = !isNaN(actual) && actual > 0;
+        const happened = hasValue(actuals[e.key]);
 
         // Find predictions
         const predictions = players.map(p => ({
@@ -374,9 +379,9 @@ function AdminPanel({ actuals, onRefresh }) {
           {EVENTS.map(e => (
             <div key={e.key} style={{
               padding:"4px 10px", borderRadius:3, fontSize:".8rem",
-              background: parseInt(actuals[e.key],10)>0 ? "rgba(74,222,128,.1)" : "rgba(255,255,255,.04)",
-              border:`1px solid ${parseInt(actuals[e.key],10)>0?"rgba(74,222,128,.3)":"#333"}`,
-              color: parseInt(actuals[e.key],10)>0 ? "#4ade80" : "#888",
+              background: hasValue(actuals[e.key]) ? "rgba(74,222,128,.1)" : "rgba(255,255,255,.04)",
+              border:`1px solid ${hasValue(actuals[e.key])?"rgba(74,222,128,.3)":"#333"}`,
+              color: hasValue(actuals[e.key]) ? "#4ade80" : "#888",
             }}>
               {e.icon} {e.key}: {actuals[e.key]||"—"}
             </div>
@@ -429,7 +434,7 @@ function FinalGame() {
     }
   }
 
-  const eventsHappened = EVENTS.filter(e => actuals && parseInt(actuals[e.key],10) > 0).length;
+  const eventsHappened = EVENTS.filter(e => actuals && hasValue(actuals[e.key])).length;
 
   return (
     <div style={{
@@ -470,7 +475,7 @@ function FinalGame() {
             </div>
             <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:"2rem", color:"#555", letterSpacing:4 }}>
               {actuals && (parseInt(actuals.SpainScore,10)>=0 && parseInt(actuals.ArgScore,10)>=0 &&
-               (parseInt(actuals.SpainScore,10)>0 || parseInt(actuals.ArgScore,10)>0))
+               (hasValue(actuals.SpainScore) && hasValue(actuals.ArgScore)))
                 ? `${actuals.SpainScore} – ${actuals.ArgScore}`
                 : "vs"
               }
